@@ -1,10 +1,7 @@
 import Sidebar from "../components/Sidebar";
-// 1. IMPORT the hook from your context
 import { useTasks } from "../context/TaskContext"; 
 
 const Dashboard = () => {
-  // 2. DEFINE stats by pulling it from the context
-  // This is the line that was missing and causing the error!
   const { stats } = useTasks(); 
 
   return (
@@ -25,19 +22,15 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Statistics Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Total Tasks Card */}
           <div className="bg-white p-6 rounded-lg shadow-sm flex justify-between items-start">
             <div>
               <p className="text-sm font-semibold text-gray-400">Total Tasks</p>
-              {/* Now this will work because stats is defined above */}
               <h2 className="text-4xl font-bold text-[#1e293b] mt-2">{stats.total}</h2>
             </div>
             <div className="w-10 h-10 bg-[#2563eb] rounded-lg flex items-center justify-center text-white text-xl">≡</div>
           </div>
 
-          {/* Completed Tasks Card */}
           <div className="bg-white p-6 rounded-lg shadow-sm flex justify-between items-start">
             <div>
               <p className="text-sm font-semibold text-gray-400">Completed Tasks</p>
@@ -46,18 +39,15 @@ const Dashboard = () => {
             <div className="w-10 h-10 bg-[#34a853] rounded-lg flex items-center justify-center text-white text-xl font-bold">✓</div>
           </div>
 
-          {/* Pending Tasks Card */}
           <div className="bg-white p-6 rounded-lg shadow-sm flex justify-between items-start">
             <div>
               <p className="text-sm font-semibold text-gray-400">Pending Tasks</p>
-              {/* Fixed: Use stats.pending instead of hardcoded 0 */}
               <h2 className="text-4xl font-bold text-[#1e293b] mt-2">{stats.pending}</h2>
             </div>
             <div className="w-10 h-10 bg-[#e65f41] rounded-lg flex items-center justify-center text-white text-xl">≡</div>
           </div>
         </div>
 
-        {/* Recent Activities Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-5 border-b border-gray-100">
             <h3 className="font-bold text-lg text-[#1e293b]">Recent Activities</h3>
