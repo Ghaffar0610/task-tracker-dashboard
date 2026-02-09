@@ -1,36 +1,118 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useAuth } from "./AuthContext";
 
 const TaskContext = createContext(null);
 
 export const TaskProvider = ({ children }) => {
   const [tasks, setTasks] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { token, isAuthenticated, isReady } = useAuth();
 
-  const addTask = (title, description) => {
-    const newTask = {
-      id: Date.now(),
-      title,
-      description,
-      status: "pending",
-      createdAt: new Date().toLocaleDateString(),
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+  useEffect(() => {
+    const loadTasks = async () => {
+      if (!isReady || !isAuthenticated || !token) {
+        setTasks([]);
+        return;
+      }
+
+      setIsLoading(true);
+      setError("");
+      try {
+        const response = await fetch(`${apiBase}/api/tasks`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          setError(data.message || "Failed to load tasks.");
+          setTasks([]);
+          return;
+        }
+        setTasks(data);
+      } catch (err) {
+        setError("Unable to reach the server.");
+        setTasks([]);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    setTasks((prev) => [...prev, newTask]);
+
+    loadTasks();
+  }, [apiBase, isAuthenticated, isReady, token]);
+
+  const addTask = async (title, description, status = "pending") => {
+    setError("");
+    try {
+      const response = await fetch(`${apiBase}/api/tasks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title, description, status }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message || "Failed to create task.");
+        return null;
+      }
+      setTasks((prev) => [data, ...prev]);
+      return data._id;
+    } catch (err) {
+      setError("Unable to reach the server.");
+      return null;
+    }
   };
 
-  const deleteTask = (id) => {
-    setTasks((prev) => prev.filter((task) => task.id !== id));
+  const deleteTask = async (id) => {
+    setError("");
+    try {
+      const response = await fetch(`${apiBase}/api/tasks/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message || "Failed to delete task.");
+        return;
+      }
+      setTasks((prev) => prev.filter((task) => task._id !== id));
+    } catch (err) {
+      setError("Unable to reach the server.");
+    }
   };
 
-  const toggleTaskStatus = (id) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === id
-          ? {
-              ...task,
-              status: task.status === "completed" ? "pending" : "completed",
-            }
-          : task
-      )
-    );
+  const toggleTaskStatus = async (id) => {
+    const task = tasks.find((item) => item._id === id);
+    if (!task) return;
+    const nextStatus = task.status === "completed" ? "pending" : "completed";
+    await updateTask(id, { status: nextStatus });
+  };
+
+  const updateTask = async (id, updates) => {
+    setError("");
+    try {
+      const response = await fetch(`${apiBase}/api/tasks/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updates),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message || "Failed to update task.");
+        return;
+      }
+      setTasks((prev) =>
+        prev.map((task) => (task._id === id ? data : task))
+      );
+    } catch (err) {
+      setError("Unable to reach the server.");
+    }
   };
 
   const stats = useMemo(() => {
@@ -43,7 +125,16 @@ export const TaskProvider = ({ children }) => {
 
   return (
     <TaskContext.Provider
-      value={{ tasks, stats, addTask, deleteTask, toggleTaskStatus }}
+      value={{
+        tasks,
+        stats,
+        isLoading,
+        error,
+        addTask,
+        deleteTask,
+        toggleTaskStatus,
+        updateTask,
+      }}
     >
       {children}
     </TaskContext.Provider>

@@ -16,7 +16,7 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
 
@@ -25,8 +25,27 @@ const Login = () => {
       return;
     }
 
-    login(remember);
-    navigate("/dashboard", { replace: true });
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/auth/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
+
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message || "Login failed.");
+        return;
+      }
+
+      login({ token: data.token, user: data.user, remember });
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      setError("Unable to reach the server.");
+    }
   };
 
   return (

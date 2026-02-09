@@ -1,8 +1,16 @@
 import Sidebar from "../components/Sidebar";
-import { useTasks } from "../context/TaskContext"; 
+import { useTasks } from "../context/TaskContext";
 
 const Dashboard = () => {
-  const { stats } = useTasks(); 
+  const { stats, tasks, isLoading, error } = useTasks();
+
+  const recentActivities = tasks.slice(0, 3);
+  const formatDate = (value) => {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleDateString();
+  };
 
   return (
     <div className="flex min-h-screen bg-[#f3f4f9]">
@@ -53,19 +61,42 @@ const Dashboard = () => {
             <h3 className="font-bold text-lg text-[#1e293b]">Recent Activities</h3>
           </div>
           
-          <div className="p-5 space-y-6">
-            <div className="flex border-b items-center gap-4">
-              <div className="w-4 h-4 bg-blue-500 rounded-sm"></div>
-              <p className="text-gray-700 text-sm">Task "Update Report" completed</p>
-            </div>
-            <div className="flex border-b items-center gap-4">
-              <div className="w-4 h-4 bg-blue-700 rounded-sm"></div>
-              <p className="text-gray-700 text-sm">Task "Teemting eding" completed</p>
-            </div>
-            <div className="flex border-b items-center gap-4">
-              <div className="w-4 h-4 bg-green-600 rounded-sm"></div>
-              <p className="text-gray-700 text-sm">New task "Teem Meeting" added</p>
-            </div>
+          <div className="p-5 space-y-4">
+            {error ? (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+                {error}
+              </div>
+            ) : null}
+
+            {isLoading ? (
+              <div className="text-sm text-gray-500">Loading recent activity...</div>
+            ) : recentActivities.length === 0 ? (
+              <div className="text-sm text-gray-500">No recent activity yet.</div>
+            ) : (
+              recentActivities.map((task) => (
+                <div
+                  key={task._id}
+                  className="flex items-center gap-4 border-b border-gray-100 pb-4 last:border-b-0 last:pb-0"
+                >
+                  <div
+                    className={`h-4 w-4 rounded-sm ${
+                      task.status === "completed"
+                        ? "bg-green-600"
+                        : "bg-blue-500"
+                    }`}
+                  ></div>
+                  <div className="flex flex-col">
+                    <p className="text-gray-700 text-sm">
+                      Task "{task.title}"{" "}
+                      {task.status === "completed" ? "completed" : "pending"}
+                    </p>
+                    <span className="text-xs text-gray-400">
+                      {formatDate(task.createdAt)}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </main>

@@ -1,13 +1,19 @@
-// Minimal Express server to keep nodemon alive and provide a health check.
-// This is intentionally lightweight scaffolding for local dev.
-
-const express = require("express");
+﻿const express = require("express");
 const dotenv = require("dotenv");
+const cors = require("cors");
+const connectDB = require("./config/db");
+const authRoutes = require("./routes/authRoutes");
+const taskRoutes = require("./routes/taskRoutes");
+const activityRoutes = require("./routes/activityRoutes");
 
 dotenv.config({ override: true });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+app.use(cors({ origin: process.env.CLIENT_URL || "*" }));
+app.use(express.json());
+
 
 app.get("/", (_req, res) => {
   res
@@ -19,6 +25,24 @@ app.get("/health", (_req, res) => {
   res.status(200).json({ ok: true });
 });
 
-app.listen(PORT, () => {
-  console.log(`API listening on http://localhost:${PORT}`);
+app.use("/api/auth", authRoutes);
+app.use("/api/tasks", taskRoutes);
+
+app.use((err, _req, res, _next) => {
+  console.error(err);
+  res.status(500).json({ message: "Something went wrong." });
 });
+
+const start = async () => {
+  try {
+    await connectDB(process.env.MONGO_URI);
+    app.listen(PORT, () => {
+      console.log(`API listening on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error.message);
+    process.exit(1);
+  }
+};
+
+start();
