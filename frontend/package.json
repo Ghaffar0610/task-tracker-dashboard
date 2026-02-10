@@ -10,9 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "mongodb": "^7.1.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-easy-crop": "^5.4.1",
     "react-router-dom": "^7.13.0"
   },
   "devDependencies": {

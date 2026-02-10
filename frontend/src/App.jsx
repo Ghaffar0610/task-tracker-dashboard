@@ -1,19 +1,23 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Tasks from "./pages/Tasks";
 import NotFound from "./pages/NotFound";
 import { TaskProvider } from "./context/TaskContext";
 import { AuthProvider } from "./context/AuthContext";
+import { FocusProvider } from "./context/FocusContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
     <AuthProvider>
-      <TaskProvider>
+      <FocusProvider>
+        <TaskProvider>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route
               path="/dashboard"
               element={
@@ -33,7 +37,8 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </TaskProvider>
+        </TaskProvider>
+      </FocusProvider>
     </AuthProvider>
   );
 }

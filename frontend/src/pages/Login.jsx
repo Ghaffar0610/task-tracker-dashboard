@@ -8,7 +8,9 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -22,6 +24,16 @@ const Login = () => {
 
     if (!email || !password) {
       setError("Please enter your email and password.");
+      return;
+    }
+
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
       return;
     }
 
@@ -73,13 +85,21 @@ const Login = () => {
             <label className="block text-sm font-semibold text-gray-600">
               Password
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-              
-            />
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="rounded-md border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center justify-between">
@@ -102,6 +122,13 @@ const Login = () => {
             className="w-full rounded-md bg-blue-600 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
           >
             Login
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/register")}
+            className="mx-auto block text-sm font-semibold text-blue-600 hover:text-blue-700"
+          >
+            Create Account
           </button>
           <button
             type="button"

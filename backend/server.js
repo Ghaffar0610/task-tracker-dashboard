@@ -5,6 +5,9 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const activityRoutes = require("./routes/activityRoutes");
+const userRoutes = require("./routes/userRoutes");
+const focusRoutes = require("./routes/focusRoutes");
+const path = require("path");
 
 dotenv.config({ override: true });
 
@@ -13,6 +16,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors({ origin: process.env.CLIENT_URL || "*" }));
 app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 app.get("/", (_req, res) => {
@@ -27,6 +31,9 @@ app.get("/health", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
+app.use("/api/activities", activityRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/focus", focusRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

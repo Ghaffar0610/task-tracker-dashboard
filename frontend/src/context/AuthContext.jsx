@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 const AuthContext = createContext(null);
 
@@ -11,6 +11,42 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState("");
   const [user, setUser] = useState(null);
   const [isReady, setIsReady] = useState(false);
+  const logoutTimerRef = useRef(null);
+
+  const clearLogoutTimer = () => {
+    if (logoutTimerRef.current) {
+      clearTimeout(logoutTimerRef.current);
+      logoutTimerRef.current = null;
+    }
+  };
+
+  const parseJwt = (jwtToken) => {
+    try {
+      const [, payload] = jwtToken.split(".");
+      if (!payload) return null;
+      const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+      const json = atob(normalized);
+      return JSON.parse(json);
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const scheduleAutoLogout = (jwtToken) => {
+    clearLogoutTimer();
+    if (!jwtToken) return;
+    const payload = parseJwt(jwtToken);
+    if (!payload?.exp) return;
+    const expiresAtMs = payload.exp * 1000;
+    const delay = expiresAtMs - Date.now();
+    if (delay <= 0) {
+      logout();
+      return;
+    }
+    logoutTimerRef.current = setTimeout(() => {
+      logout();
+    }, delay);
+  };
 
   useEffect(() => {
     const storedToken =
@@ -20,9 +56,13 @@ export const AuthProvider = ({ children }) => {
     setUser(storedUser ? JSON.parse(storedUser) : null);
     setIsAuthenticated(Boolean(storedToken));
     setIsReady(true);
+    if (storedToken) {
+      scheduleAutoLogout(storedToken);
+    }
   }, []);
 
   const login = ({ token: authToken, user: authUser, remember }) => {
+    scheduleAutoLogout(authToken);
     if (remember) {
       localStorage.setItem(TOKEN_KEY, authToken);
       localStorage.setItem(USER_KEY, JSON.stringify(authUser));
@@ -38,6 +78,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    clearLogoutTimer();
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     sessionStorage.removeItem(TOKEN_SESSION_KEY);
@@ -46,8 +87,15 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
   };
 
+  const updateUser = (nextUser) => {
+    setUser(nextUser);
+    if (localStorage.getItem(USER_KEY)) {
+      localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
+    }
+  };
+
   const value = useMemo(
-    () => ({ isAuthenticated, isReady, token, user, login, logout }),
+    () => ({ isAuthenticated, isReady, token, user, login, logout, updateUser }),
     [isAuthenticated, isReady, token, user]
   );
 

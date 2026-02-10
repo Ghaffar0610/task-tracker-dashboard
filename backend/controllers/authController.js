@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
 const createToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT, {
+  return jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: "7d",
   });
 };
@@ -13,6 +13,13 @@ const register = async (req, res) => {
 
   if (!name || !email || !password) {
     return res.status(400).json({ message: "All fields are required." });
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Invalid email address." });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ message: "Password must be at least 6 characters." });
   }
 
   const existing = await User.findOne({ email });
@@ -26,7 +33,7 @@ const register = async (req, res) => {
   const token = createToken(user._id);
   return res.status(201).json({
     token,
-    user: { id: user._id, name: user.name, email: user.email },
+    user: { id: user._id, name: user.name, email: user.email, avatarUrl: user.avatarUrl || "" },
   });
 };
 
@@ -35,6 +42,13 @@ const login = async (req, res) => {
 
   if (!email || !password) {
     return res.status(400).json({ message: "Email and password are required." });
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Invalid email address." });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ message: "Password must be at least 6 characters." });
   }
 
   const user = await User.findOne({ email });
@@ -50,7 +64,7 @@ const login = async (req, res) => {
   const token = createToken(user._id);
   return res.status(200).json({
     token,
-    user: { id: user._id, name: user.name, email: user.email },
+    user: { id: user._id, name: user.name, email: user.email, avatarUrl: user.avatarUrl || "" },
   });
 };
 

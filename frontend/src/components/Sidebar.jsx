@@ -45,7 +45,8 @@ const Sidebar = () => {
           onClick={handleLogout}
           type="button"
         >
-          <span className="text-sm font-semibold">LOGOUT</span>
+          <span className="flex h-5 w-5 items-center justify-center rounded-sm border-2 border-white text-[10px]">L</span>
+          Logout
         </button>
       </nav>
     </div>

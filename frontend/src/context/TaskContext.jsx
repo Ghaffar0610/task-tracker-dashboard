@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useAuth } from "./AuthContext";
+import { useFocus } from "./FocusContext";
 
 const TaskContext = createContext(null);
 
@@ -8,6 +9,7 @@ export const TaskProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const { token, isAuthenticated, isReady } = useAuth();
+  const { incrementTaskCompleted } = useFocus();
 
   const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -94,6 +96,7 @@ export const TaskProvider = ({ children }) => {
   const updateTask = async (id, updates) => {
     setError("");
     try {
+      const currentTask = tasks.find((task) => task._id === id);
       const response = await fetch(`${apiBase}/api/tasks/${id}`, {
         method: "PUT",
         headers: {
@@ -110,6 +113,13 @@ export const TaskProvider = ({ children }) => {
       setTasks((prev) =>
         prev.map((task) => (task._id === id ? data : task))
       );
+      if (
+        updates.status === "completed" &&
+        currentTask &&
+        currentTask.status !== "completed"
+      ) {
+        incrementTaskCompleted();
+      }
     } catch (err) {
       setError("Unable to reach the server.");
     }
