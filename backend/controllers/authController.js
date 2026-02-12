@@ -33,7 +33,17 @@ const register = async (req, res) => {
   const token = createToken(user._id);
   return res.status(201).json({
     token,
-    user: { id: user._id, name: user.name, email: user.email, avatarUrl: user.avatarUrl || "" },
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatarUrl || "",
+      emailNotificationsEnabled: Boolean(user.emailNotificationsEnabled),
+      emailNotificationTypes:
+        user.emailNotificationTypes && user.emailNotificationTypes.length > 0
+          ? user.emailNotificationTypes
+          : ["task_created", "task_updated", "task_completed", "task_deleted"],
+    },
   });
 };
 
@@ -64,7 +74,17 @@ const login = async (req, res) => {
   const token = createToken(user._id);
   return res.status(200).json({
     token,
-    user: { id: user._id, name: user.name, email: user.email, avatarUrl: user.avatarUrl || "" },
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatarUrl || "",
+      emailNotificationsEnabled: Boolean(user.emailNotificationsEnabled),
+      emailNotificationTypes:
+        user.emailNotificationTypes && user.emailNotificationTypes.length > 0
+          ? user.emailNotificationTypes
+          : ["task_created", "task_updated", "task_completed", "task_deleted"],
+    },
   });
 };
 

@@ -30,6 +30,9 @@ const NotificationBell = () => {
   const [items, setItems] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [error, setError] = useState("");
+  const [emailEnabled, setEmailEnabled] = useState(false);
+  const [loadingPrefs, setLoadingPrefs] = useState(false);
+  const [savingPrefs, setSavingPrefs] = useState(false);
   const panelRef = useRef(null);
 
   const hasUnread = unreadCount > 0;
@@ -59,6 +62,58 @@ const NotificationBell = () => {
       setError("Unable to reach the server.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadPreferences = async () => {
+    if (!token || !isAuthenticated) return;
+    setLoadingPrefs(true);
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/users/me/notification-preferences`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await response.json();
+      if (!response.ok) return;
+      setEmailEnabled(Boolean(data.emailNotificationsEnabled));
+    } catch (_err) {
+      // Keep notification panel usable even if preferences request fails.
+    } finally {
+      setLoadingPrefs(false);
+    }
+  };
+
+  const updateEmailPreference = async (nextValue) => {
+    if (!token) return;
+    setSavingPrefs(true);
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/users/me/notification-preferences`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            emailNotificationsEnabled: nextValue,
+            emailNotificationTypes: [
+              "task_created",
+              "task_updated",
+              "task_completed",
+              "task_deleted",
+            ],
+          }),
+        }
+      );
+      if (!response.ok) return;
+      setEmailEnabled(nextValue);
+    } catch (_err) {
+      // Keep panel responsive even when save fails.
+    } finally {
+      setSavingPrefs(false);
     }
   };
 
@@ -101,6 +156,7 @@ const NotificationBell = () => {
       return;
     }
     loadNotifications();
+    loadPreferences();
   }, [isAuthenticated, token]);
 
   useEffect(() => {
@@ -154,6 +210,35 @@ const NotificationBell = () => {
               disabled={!hasUnread}
             >
               Mark all read
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-[#1e293b]">
+                Email notifications
+              </p>
+              <p className="text-xs text-gray-500">
+                Get task alerts by email
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => updateEmailPreference(!emailEnabled)}
+              disabled={loadingPrefs || savingPrefs}
+              className={[
+                "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                emailEnabled ? "bg-blue-600" : "bg-gray-300",
+                loadingPrefs || savingPrefs ? "opacity-60" : "",
+              ].join(" ")}
+              aria-label="Toggle email notifications"
+            >
+              <span
+                className={[
+                  "inline-block h-5 w-5 transform rounded-full bg-white transition",
+                  emailEnabled ? "translate-x-5" : "translate-x-0.5",
+                ].join(" ")}
+              />
             </button>
           </div>
 

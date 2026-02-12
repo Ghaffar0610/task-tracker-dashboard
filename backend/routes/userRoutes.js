@@ -1,7 +1,13 @@
 const express = require("express");
 const multer = require("multer");
 const authMiddleware = require("../middleware/auth");
-const { getMe, updateMe, changePassword } = require("../controllers/userController");
+const {
+  getMe,
+  updateMe,
+  changePassword,
+  getNotificationPreferences,
+  updateNotificationPreferences,
+} = require("../controllers/userController");
 
 const router = express.Router();
 
@@ -19,5 +25,7 @@ router.use(authMiddleware);
 router.get("/me", getMe);
 router.put("/me", upload.single("avatar"), updateMe);
 router.put("/me/password", changePassword);
+router.get("/me/notification-preferences", getNotificationPreferences);
+router.put("/me/notification-preferences", updateNotificationPreferences);
 
 module.exports = router;

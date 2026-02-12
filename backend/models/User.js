@@ -24,6 +24,15 @@ const userSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    emailNotificationsEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    emailNotificationTypes: {
+      type: [String],
+      enum: ["task_created", "task_updated", "task_completed", "task_deleted"],
+      default: ["task_created", "task_updated", "task_completed", "task_deleted"],
+    },
   },
   { timestamps: true }
 );
