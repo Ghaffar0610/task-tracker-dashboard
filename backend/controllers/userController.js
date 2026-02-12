@@ -17,7 +17,8 @@ const updateMe = async (req, res) => {
     }
   }
   if (req.file) {
-    updates.avatarUrl = `/uploads/${req.file.filename}`;
+    const encoded = req.file.buffer.toString("base64");
+    updates.avatarUrl = `data:${req.file.mimetype};base64,${encoded}`;
   }
 
   const user = await User.findByIdAndUpdate(req.user.id, updates, {

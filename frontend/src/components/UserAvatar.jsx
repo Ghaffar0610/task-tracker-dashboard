@@ -3,7 +3,9 @@ import { API_BASE_URL } from "../config/api";
 
 const getAvatarSrc = (avatarUrl) => {
   if (!avatarUrl) return "";
-  if (avatarUrl.startsWith("http")) return avatarUrl;
+  if (avatarUrl.startsWith("http") || avatarUrl.startsWith("data:")) {
+    return avatarUrl;
+  }
   return `${API_BASE_URL}${avatarUrl}`;
 };
 
