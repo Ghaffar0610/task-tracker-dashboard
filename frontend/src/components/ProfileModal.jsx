@@ -1,11 +1,13 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Cropper from "react-easy-crop";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL } from "../config/api";
 import getCroppedImg from "../utils/cropImage";
 
 const ProfileModal = ({ isOpen, onClose }) => {
-  const { user, token, updateUser } = useAuth();
+  const navigate = useNavigate();
+  const { user, token, updateUser, logout } = useAuth();
   const [name, setName] = useState(user?.name || "");
   const [imageSrc, setImageSrc] = useState("");
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -190,18 +192,46 @@ const ProfileModal = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    onClose();
+    navigate("/", { replace: true });
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/40">
       <div className="flex h-full w-full items-end justify-center px-4 pb-4 pt-8 sm:items-center sm:pb-0">
         <div className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-xl bg-white shadow-xl">
-          <div className="flex items-center justify-between border-b border-gray-200 px-4 py-4 sm:px-6">
-            <h2 className="text-lg font-semibold text-[#1e293b]">
+          <div className="relative border-b border-gray-200 px-4 py-4 sm:px-6">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="absolute left-4 top-1/2 -translate-y-1/2 rounded-md p-2 text-red-600 hover:bg-red-50"
+              title="Logout"
+              aria-label="Logout"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <path d="M16 17l5-5-5-5" />
+                <path d="M21 12H9" />
+              </svg>
+            </button>
+            <h2 className="text-center text-lg font-semibold text-[#1e293b]">
               Edit Profile
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className="text-xl text-gray-400 hover:text-gray-600"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-xl text-gray-400 hover:text-gray-600"
             >
               x
             </button>
@@ -396,6 +426,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                 </div>
               ) : null}
             </div>
+
           </div>
         </div>
       </div>
