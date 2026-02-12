@@ -213,7 +213,14 @@ const NotificationBell = () => {
       </button>
 
       {isOpen ? (
-        <div className="absolute right-0 z-40 mt-2 w-[min(90vw,24rem)] rounded-xl border border-gray-200 bg-white shadow-xl">
+        <>
+          <button
+            type="button"
+            aria-label="Close notifications"
+            onClick={() => setIsOpen(false)}
+            className="fixed inset-0 z-30 bg-black/30 md:hidden"
+          />
+          <div className="fixed inset-x-2 bottom-4 top-16 z-40 flex flex-col rounded-xl border border-gray-200 bg-white shadow-xl md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-[min(90vw,24rem)] md:max-h-[32rem]">
           <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
             <div>
               <p className="text-sm font-semibold text-[#1e293b]">Notifications</p>
@@ -221,14 +228,24 @@ const NotificationBell = () => {
                 {unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={markAllRead}
-              className="text-xs font-semibold text-blue-600 hover:text-blue-700"
-              disabled={!hasUnread}
-            >
-              Mark all read
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={markAllRead}
+                className="text-xs font-semibold text-blue-600 hover:text-blue-700"
+                disabled={!hasUnread}
+              >
+                Mark all read
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:text-gray-700 md:hidden"
+                aria-label="Close notifications panel"
+              >
+                x
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
@@ -260,7 +277,7 @@ const NotificationBell = () => {
             </button>
           </div>
 
-          <div className="max-h-80 overflow-y-auto p-2">
+          <div className="min-h-0 flex-1 overflow-y-auto p-2">
             {isLoading ? (
               <div className="p-3 text-sm text-gray-500">Loading notifications...</div>
             ) : error ? (
@@ -297,6 +314,7 @@ const NotificationBell = () => {
             )}
           </div>
         </div>
+        </>
       ) : null}
     </div>
   );
