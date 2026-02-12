@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { BellIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -34,6 +35,7 @@ const NotificationBell = () => {
   const [loadingPrefs, setLoadingPrefs] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
   const panelRef = useRef(null);
+  const triggerRef = useRef(null);
 
   const hasUnread = unreadCount > 0;
 
@@ -180,7 +182,10 @@ const NotificationBell = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!panelRef.current) return;
-      if (!panelRef.current.contains(event.target)) {
+      if (
+        !panelRef.current.contains(event.target) &&
+        !triggerRef.current?.contains(event.target)
+      ) {
         setIsOpen(false);
       }
     };
@@ -197,6 +202,7 @@ const NotificationBell = () => {
   return (
     <div className="relative" ref={panelRef}>
       <button
+        ref={triggerRef}
         type="button"
         onClick={async () => {
           const next = !isOpen;
@@ -214,13 +220,122 @@ const NotificationBell = () => {
 
       {isOpen ? (
         <>
-          <button
-            type="button"
-            aria-label="Close notifications"
-            onClick={() => setIsOpen(false)}
-            className="fixed inset-0 z-30 bg-black/30 md:hidden"
-          />
-          <div className="fixed inset-x-2 bottom-4 top-16 z-40 flex flex-col rounded-xl border border-gray-200 bg-white shadow-xl md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-[min(90vw,24rem)] md:max-h-[32rem]">
+          {createPortal(
+            <div className="fixed inset-0 z-[1000] md:hidden">
+              <button
+                type="button"
+                aria-label="Close notifications"
+                onClick={() => setIsOpen(false)}
+                className="absolute inset-0 bg-black/30"
+              />
+              <div className="absolute inset-x-2 bottom-4 top-16 flex flex-col rounded-xl border border-gray-200 bg-white shadow-xl">
+                <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-semibold text-[#1e293b]">
+                      Notifications
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={markAllRead}
+                      className="text-xs font-semibold text-blue-600 hover:text-blue-700"
+                      disabled={!hasUnread}
+                    >
+                      Mark all read
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsOpen(false)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:text-gray-700"
+                      aria-label="Close notifications panel"
+                    >
+                      x
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-semibold text-[#1e293b]">
+                      Email notifications
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Get task alerts by email
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => updateEmailPreference(!emailEnabled)}
+                    disabled={loadingPrefs || savingPrefs}
+                    className={[
+                      "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                      emailEnabled ? "bg-blue-600" : "bg-gray-300",
+                      loadingPrefs || savingPrefs ? "opacity-60" : "",
+                    ].join(" ")}
+                    aria-label="Toggle email notifications"
+                  >
+                    <span
+                      className={[
+                        "inline-block h-5 w-5 transform rounded-full bg-white transition",
+                        emailEnabled ? "translate-x-5" : "translate-x-0.5",
+                      ].join(" ")}
+                    />
+                  </button>
+                </div>
+
+                <div className="min-h-0 flex-1 overflow-y-auto p-2">
+                  {isLoading ? (
+                    <div className="p-3 text-sm text-gray-500">
+                      Loading notifications...
+                    </div>
+                  ) : error ? (
+                    <div className="p-3 text-sm text-red-500">{error}</div>
+                  ) : sortedItems.length === 0 ? (
+                    <div className="p-3 text-sm text-gray-500">
+                      No notifications yet.
+                    </div>
+                  ) : (
+                    sortedItems.map((item) => (
+                      <button
+                        key={item._id}
+                        type="button"
+                        onClick={async () => {
+                          if (!item.isRead) await markRead(item._id);
+                          setIsOpen(false);
+                          navigate("/tasks");
+                        }}
+                        className={[
+                          "mb-1 w-full rounded-lg px-3 py-3 text-left",
+                          item.isRead
+                            ? "bg-white hover:bg-gray-50"
+                            : "bg-blue-50 hover:bg-blue-100",
+                        ].join(" ")}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-sm font-semibold text-[#1e293b]">
+                            {item.title}
+                          </p>
+                          {!item.isRead ? (
+                            <span className="mt-1 inline-block h-2 w-2 rounded-full bg-blue-500" />
+                          ) : null}
+                        </div>
+                        <p className="mt-1 text-xs text-gray-600">{item.message}</p>
+                        <p className="mt-2 text-[11px] text-gray-400">
+                          {formatRelativeTime(item.createdAt)}
+                        </p>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>,
+            document.body
+          )}
+          <div className="hidden md:absolute md:inset-auto md:right-0 md:top-full md:z-40 md:mt-2 md:flex md:w-[min(90vw,24rem)] md:max-h-[32rem] md:flex-col md:rounded-xl md:border md:border-gray-200 md:bg-white md:shadow-xl">
           <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
             <div>
               <p className="text-sm font-semibold text-[#1e293b]">Notifications</p>
