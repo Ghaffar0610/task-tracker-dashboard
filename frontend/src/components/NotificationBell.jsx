@@ -160,6 +160,24 @@ const NotificationBell = () => {
   }, [isAuthenticated, token]);
 
   useEffect(() => {
+    if (!isAuthenticated || !token) return;
+
+    const refresh = () => {
+      loadNotifications();
+    };
+
+    const intervalId = window.setInterval(refresh, 10000);
+    window.addEventListener("tt-notification-refresh", refresh);
+    document.addEventListener("visibilitychange", refresh);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("tt-notification-refresh", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [isAuthenticated, token]);
+
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (!panelRef.current) return;
       if (!panelRef.current.contains(event.target)) {

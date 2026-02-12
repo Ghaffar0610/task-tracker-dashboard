@@ -13,6 +13,9 @@ export const TaskProvider = ({ children }) => {
   const { incrementTaskCompleted } = useFocus();
 
   const apiBase = API_BASE_URL;
+  const notifyNotificationRefresh = () => {
+    window.dispatchEvent(new Event("tt-notification-refresh"));
+  };
 
   useEffect(() => {
     const loadTasks = async () => {
@@ -62,6 +65,7 @@ export const TaskProvider = ({ children }) => {
         return null;
       }
       setTasks((prev) => [data, ...prev]);
+      notifyNotificationRefresh();
       return data._id;
     } catch (err) {
       setError("Unable to reach the server.");
@@ -82,6 +86,7 @@ export const TaskProvider = ({ children }) => {
         return;
       }
       setTasks((prev) => prev.filter((task) => task._id !== id));
+      notifyNotificationRefresh();
     } catch (err) {
       setError("Unable to reach the server.");
     }
@@ -114,6 +119,7 @@ export const TaskProvider = ({ children }) => {
       setTasks((prev) =>
         prev.map((task) => (task._id === id ? data : task))
       );
+      notifyNotificationRefresh();
       if (
         updates.status === "completed" &&
         currentTask &&
