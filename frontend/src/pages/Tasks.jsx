@@ -109,11 +109,11 @@ const Tasks = () => {
       <PageHeader
         title="Your Tasks"
         right={
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-4">
             <button
               type="button"
               onClick={openAddModal}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+              className="rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
             >
               Add Task
             </button>
@@ -135,7 +135,7 @@ const Tasks = () => {
               setSearchParams({ status: next });
             }
           }}
-          className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          className="min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
         >
           <option value="all">All</option>
           <option value="pending">Pending</option>
@@ -187,9 +187,9 @@ const Tasks = () => {
       {duplicateConfirm
         ? createPortal(
             <div className="fixed inset-0 z-[1000] bg-black/40">
-              <div className="flex h-full w-full items-center justify-center px-4">
-                <div className="w-full max-w-md rounded-xl bg-white shadow-xl">
-                  <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+              <div className="flex h-full w-full items-end justify-center px-4 pb-4 pt-8 sm:items-center sm:pb-0">
+                <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-xl bg-white shadow-xl">
+                  <div className="flex items-center justify-between border-b border-gray-200 px-4 py-4 sm:px-6">
                     <h2 className="text-lg font-semibold text-[#1e293b]">
                       Duplicate Task
                     </h2>
@@ -204,26 +204,26 @@ const Tasks = () => {
                       x
                     </button>
                   </div>
-                  <div className="px-6 py-5 space-y-4">
+                  <div className="space-y-4 px-4 py-5 sm:px-6">
                     <p className="text-sm text-gray-600">
                       A task with the same title already exists. Do you still
                       want to add it?
                     </p>
-                    <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
+                    <div className="flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end sm:gap-3">
                       <button
                         type="button"
                         onClick={() => {
                           setDuplicateConfirm(null);
                           setIsModalOpen(true);
                         }}
-                        className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                        className="rounded-md border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50"
                       >
                         Cancel
                       </button>
                       <button
                         type="button"
                         onClick={confirmDuplicateAdd}
-                        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+                        className="rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
                       >
                         Add Anyway
                       </button>

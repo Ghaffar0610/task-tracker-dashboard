@@ -1,4 +1,4 @@
-import {
+﻿import {
   Bars3Icon,
   BellIcon,
   CheckIcon,
@@ -143,7 +143,7 @@ const Dashboard = () => {
       <PageHeader
         title="Welcome Back!"
         right={
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-4">
             <button
               type="button"
               className="text-gray-400 hover:text-gray-500"
@@ -152,7 +152,7 @@ const Dashboard = () => {
             </button>
             <button
               type="button"
-              className="text-gray-400 hover:text-gray-500"
+              className="hidden text-gray-400 hover:text-gray-500 sm:inline-flex"
             >
               <UserCircleIcon className="h-6 w-6" />
             </button>
@@ -215,7 +215,7 @@ const Dashboard = () => {
               max={180}
               value={focusMinutes}
               onChange={(event) => setFocusMinutes(Number(event.target.value))}
-              className="w-28 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="w-24 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 sm:w-28"
             />
             <button
               type="button"
@@ -288,7 +288,7 @@ const Dashboard = () => {
             <select
               value={activityAction}
               onChange={(event) => setActivityAction(event.target.value)}
-              className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
             >
               <option value="all">All Types</option>
               <option value="created">Created</option>
@@ -299,7 +299,7 @@ const Dashboard = () => {
             <select
               value={activityRange}
               onChange={(event) => setActivityRange(event.target.value)}
-              className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
             >
               <option value="all">All Time</option>
               <option value="1">Today</option>
@@ -311,7 +311,7 @@ const Dashboard = () => {
               value={activityQuery}
               onChange={(event) => setActivityQuery(event.target.value)}
               placeholder="Search activity..."
-              className="min-w-[180px] flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="min-h-11 min-w-0 flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
             />
           </div>
 
@@ -331,7 +331,7 @@ const Dashboard = () => {
             activities.map((activity) => (
               <div
                 key={activity._id}
-                className="flex items-center gap-4 border-b border-gray-100 pb-4 last:border-b-0 last:pb-0"
+                className="flex flex-wrap items-start gap-3 border-b border-gray-100 pb-4 last:border-b-0 last:pb-0 sm:flex-nowrap sm:items-center sm:gap-4"
               >
                 <div
                   className={`h-4 w-4 rounded-sm ${
@@ -340,7 +340,7 @@ const Dashboard = () => {
                       : "bg-blue-500"
                   }`}
                 ></div>
-                <div className="flex flex-1 flex-col">
+                <div className="min-w-0 flex flex-1 flex-col">
                   <p className="text-gray-700 text-sm">
                     {activity.message}
                   </p>
@@ -351,7 +351,7 @@ const Dashboard = () => {
                 <button
                   type="button"
                   onClick={() => handleDeleteRequest(activity._id)}
-                  className="rounded-md border border-red-200 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50"
+                  className="rounded-md border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50"
                 >
                   Delete
                 </button>
@@ -363,9 +363,9 @@ const Dashboard = () => {
 
       {deleteTarget ? (
         <div className="fixed inset-0 z-50 bg-black/40">
-          <div className="flex h-full w-full items-center justify-center px-4">
-            <div className="w-full max-w-md rounded-xl bg-white shadow-xl">
-              <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+          <div className="flex h-full w-full items-end justify-center px-4 pb-4 pt-8 sm:items-center sm:pb-0">
+            <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-xl bg-white shadow-xl">
+              <div className="flex items-center justify-between border-b border-gray-200 px-4 py-4 sm:px-6">
                 <h2 className="text-lg font-semibold text-[#1e293b]">
                   Confirm Deletion
                 </h2>
@@ -374,10 +374,10 @@ const Dashboard = () => {
                   onClick={() => setDeleteTarget(null)}
                   className="text-xl text-gray-400 hover:text-gray-600"
                 >
-                  ×
+                  x
                 </button>
               </div>
-              <div className="px-6 py-5 space-y-4">
+              <div className="space-y-4 px-4 py-5 sm:px-6">
                 <p className="text-sm text-gray-600">
                   Enter your password to delete this activity.
                 </p>
@@ -390,11 +390,11 @@ const Dashboard = () => {
                 {deleteError ? (
                   <p className="text-sm text-red-500">{deleteError}</p>
                 ) : null}
-                <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
+                <div className="flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end sm:gap-3">
                   <button
                     type="button"
                     onClick={() => setDeleteTarget(null)}
-                    className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                    className="rounded-md border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50"
                     disabled={deleteLoading}
                   >
                     Cancel
@@ -402,7 +402,7 @@ const Dashboard = () => {
                   <button
                     type="button"
                     onClick={handleDeleteConfirm}
-                    className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 disabled:opacity-60"
+                    className="rounded-md bg-red-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-red-700 disabled:opacity-60"
                     disabled={deleteLoading}
                   >
                     {deleteLoading ? "Deleting..." : "Delete"}
@@ -418,3 +418,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

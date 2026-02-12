@@ -3,7 +3,11 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
-    @apply bg-zinc-900 text-white;
+    @apply bg-[#f3f4f9] text-slate-900 overflow-x-hidden;
   }
 }

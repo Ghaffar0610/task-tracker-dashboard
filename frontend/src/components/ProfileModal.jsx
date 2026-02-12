@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import Cropper from "react-easy-crop";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL } from "../config/api";
@@ -156,9 +156,9 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40">
-      <div className="flex h-full w-full items-center justify-center px-4 py-6">
-        <div className="w-full max-w-lg rounded-xl bg-white shadow-xl max-h-[90vh] overflow-y-auto">
-          <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+      <div className="flex h-full w-full items-end justify-center px-4 pb-4 pt-8 sm:items-center sm:pb-0">
+        <div className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-xl bg-white shadow-xl">
+          <div className="flex items-center justify-between border-b border-gray-200 px-4 py-4 sm:px-6">
             <h2 className="text-lg font-semibold text-[#1e293b]">
               Edit Profile
             </h2>
@@ -167,11 +167,11 @@ const ProfileModal = ({ isOpen, onClose }) => {
               onClick={onClose}
               className="text-xl text-gray-400 hover:text-gray-600"
             >
-              ×
+              x
             </button>
           </div>
 
-          <div className="px-6 py-5 space-y-6">
+          <div className="space-y-6 px-4 py-5 sm:px-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="text-sm font-semibold text-gray-600">
@@ -181,7 +181,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   type="text"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  className="mt-2 w-full rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 />
               </div>
 
@@ -231,18 +231,18 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
               {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
-              <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
+              <div className="flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end sm:gap-3">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                  className="rounded-md border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50"
                   disabled={isSaving}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
+                  className="rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
                   disabled={isSaving}
                 >
                   {isSaving ? "Saving..." : "Save"}
@@ -277,7 +277,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                       type="password"
                       value={currentPassword}
                       onChange={(event) => setCurrentPassword(event.target.value)}
-                      className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                      className="mt-2 w-full rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                     />
                   </div>
                   <div>
@@ -288,7 +288,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                       type="password"
                       value={newPassword}
                       onChange={(event) => setNewPassword(event.target.value)}
-                      className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                      className="mt-2 w-full rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                     />
                   </div>
                   <div>
@@ -299,7 +299,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                       type="password"
                       value={confirmPassword}
                       onChange={(event) => setConfirmPassword(event.target.value)}
-                      className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                      className="mt-2 w-full rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                     />
                   </div>
                   {passwordError ? (
@@ -311,7 +311,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   <div className="flex justify-end">
                     <button
                       type="submit"
-                      className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
+                      className="rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
                       disabled={isChangingPassword}
                     >
                       {isChangingPassword ? "Saving..." : "Update Password"}
@@ -328,3 +328,4 @@ const ProfileModal = ({ isOpen, onClose }) => {
 };
 
 export default ProfileModal;
+
