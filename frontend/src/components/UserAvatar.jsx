@@ -1,10 +1,10 @@
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../config/api";
 
 const getAvatarSrc = (avatarUrl) => {
   if (!avatarUrl) return "";
   if (avatarUrl.startsWith("http")) return avatarUrl;
-  const base = import.meta.env.VITE_API_URL || "http://localhost:5000";
-  return `${base}${avatarUrl}`;
+  return `${API_BASE_URL}${avatarUrl}`;
 };
 
 const getInitials = (name) => {

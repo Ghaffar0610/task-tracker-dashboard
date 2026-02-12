@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
+import { API_BASE_URL } from "../config/api";
 
 const FocusContext = createContext(null);
 
@@ -17,7 +18,7 @@ export const FocusProvider = ({ children }) => {
   const sessionIdRef = useRef("");
   const timerRef = useRef(null);
 
-  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const apiBase = API_BASE_URL;
 
   const clearTimer = () => {
     if (timerRef.current) {

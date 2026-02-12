@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../config/api";
 
 const Register = () => {
   const { isAuthenticated, login } = useAuth();
@@ -40,7 +41,7 @@ const Register = () => {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/auth/register`,
+        `${API_BASE_URL}/api/auth/register`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

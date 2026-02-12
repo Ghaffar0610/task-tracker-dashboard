@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { useFocus } from "./FocusContext";
+import { API_BASE_URL } from "../config/api";
 
 const TaskContext = createContext(null);
 
@@ -11,7 +12,7 @@ export const TaskProvider = ({ children }) => {
   const { token, isAuthenticated, isReady } = useAuth();
   const { incrementTaskCompleted } = useFocus();
 
-  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const apiBase = API_BASE_URL;
 
   useEffect(() => {
     const loadTasks = async () => {

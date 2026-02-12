@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Cropper from "react-easy-crop";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../config/api";
 import getCroppedImg from "../utils/cropImage";
 
 const ProfileModal = ({ isOpen, onClose }) => {
@@ -81,7 +82,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/users/me`,
+        `${API_BASE_URL}/api/users/me`,
         {
           method: "PUT",
           headers: { Authorization: `Bearer ${token}` },
@@ -126,7 +127,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
     setIsChangingPassword(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/users/me/password`,
+        `${API_BASE_URL}/api/users/me/password`,
         {
           method: "PUT",
           headers: {

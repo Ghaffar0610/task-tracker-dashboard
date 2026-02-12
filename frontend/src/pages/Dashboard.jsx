@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useTasks } from "../context/TaskContext";
 import { useFocus } from "../context/FocusContext";
+import { API_BASE_URL } from "../config/api";
 
 const Dashboard = () => {
   const { stats, isLoading } = useTasks();
@@ -70,7 +71,7 @@ const Dashboard = () => {
           params.set("to", to.toISOString());
         }
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/activities?${params.toString()}`,
+          `${API_BASE_URL}/api/activities?${params.toString()}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -111,7 +112,7 @@ const Dashboard = () => {
     setDeleteError("");
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/activities/${deleteTarget}`,
+        `${API_BASE_URL}/api/activities/${deleteTarget}`,
         {
           method: "DELETE",
           headers: {
