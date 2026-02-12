@@ -47,15 +47,15 @@ const consumeRecoveryCode = (user, providedCode) => {
   if (!normalized) return false;
 
   const candidateHash = hashRecoveryCode(normalized);
-  const nextCodes = (user.recoveryCodes || []).map((entry) => ({ ...entry }));
-  const index = nextCodes.findIndex(
-    (entry) => entry.codeHash === candidateHash && !entry.usedAt
+  const entries = Array.isArray(user.recoveryCodes) ? user.recoveryCodes : [];
+  const match = entries.find(
+    (entry) => String(entry.codeHash) === candidateHash && !entry.usedAt
   );
 
-  if (index < 0) return false;
+  if (!match) return false;
 
-  nextCodes[index].usedAt = new Date();
-  user.recoveryCodes = nextCodes;
+  match.usedAt = new Date();
+  user.markModified("recoveryCodes");
   return true;
 };
 
