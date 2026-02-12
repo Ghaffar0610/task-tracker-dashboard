@@ -10,6 +10,8 @@ const defaultNotificationTypes = [
   "task_deleted",
 ];
 
+const normalizeEmail = (value = "") => value.trim().toLowerCase();
+
 const createToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: "7d",
@@ -36,7 +38,8 @@ const register = async (req, res) => {
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  const normalizedEmail = normalizeEmail(email);
+  if (!emailRegex.test(normalizedEmail)) {
     return res.status(400).json({ message: "Invalid email address." });
   }
 
@@ -46,13 +49,17 @@ const register = async (req, res) => {
       .json({ message: "Password must be at least 6 characters." });
   }
 
-  const existing = await User.findOne({ email });
+  const existing = await User.findOne({ email: normalizedEmail });
   if (existing) {
     return res.status(409).json({ message: "Email already in use." });
   }
 
   const hashed = await bcrypt.hash(password, 10);
-  const user = await User.create({ name, email, password: hashed });
+  const user = await User.create({
+    name,
+    email: normalizedEmail,
+    password: hashed,
+  });
 
   const token = createToken(user._id);
   return res.status(201).json({
@@ -69,7 +76,8 @@ const login = async (req, res) => {
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  const normalizedEmail = normalizeEmail(email);
+  if (!emailRegex.test(normalizedEmail)) {
     return res.status(400).json({ message: "Invalid email address." });
   }
 
@@ -79,7 +87,7 @@ const login = async (req, res) => {
       .json({ message: "Password must be at least 6 characters." });
   }
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: normalizedEmail });
   if (!user) {
     return res.status(401).json({ message: "Invalid credentials." });
   }
@@ -106,7 +114,8 @@ const resetPasswordWithRecoveryCode = async (req, res) => {
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  const normalizedEmail = normalizeEmail(email);
+  if (!emailRegex.test(normalizedEmail)) {
     return res.status(400).json({ message: "Invalid email address." });
   }
 
@@ -116,7 +125,9 @@ const resetPasswordWithRecoveryCode = async (req, res) => {
       .json({ message: "Password must be at least 6 characters." });
   }
 
-  const user = await User.findOne({ email }).select("+recoveryCodes");
+  const user = await User.findOne({ email: normalizedEmail }).select(
+    "+recoveryCodes"
+  );
   if (!user) {
     return res.status(401).json({ message: "Invalid email or recovery code." });
   }
