@@ -6,6 +6,7 @@ import PageHeader from "../components/PageHeader";
 import TaskCard from "../components/TaskCard";
 import TaskModal from "../components/TaskModal";
 import UserProfileButton from "../components/UserProfileButton";
+import NotificationBell from "../components/NotificationBell";
 import { useTasks } from "../context/TaskContext";
 
 const Tasks = () => {
@@ -110,6 +111,7 @@ const Tasks = () => {
         title="Your Tasks"
         right={
           <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-4">
+            <NotificationBell />
             <button
               type="button"
               onClick={openAddModal}

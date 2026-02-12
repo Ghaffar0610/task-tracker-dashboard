@@ -1,14 +1,13 @@
 ﻿import {
   Bars3Icon,
-  BellIcon,
   CheckIcon,
-  UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import PageHeader from "../components/PageHeader";
 import StatCard from "../components/StatCard";
 import UserProfileButton from "../components/UserProfileButton";
+import NotificationBell from "../components/NotificationBell";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useTasks } from "../context/TaskContext";
@@ -144,18 +143,7 @@ const Dashboard = () => {
         title="Welcome Back!"
         right={
           <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-4">
-            <button
-              type="button"
-              className="text-gray-400 hover:text-gray-500"
-            >
-              <BellIcon className="h-6 w-6" />
-            </button>
-            <button
-              type="button"
-              className="hidden text-gray-400 hover:text-gray-500 sm:inline-flex"
-            >
-              <UserCircleIcon className="h-6 w-6" />
-            </button>
+            <NotificationBell />
             <UserProfileButton />
           </div>
         }
@@ -418,4 +406,6 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+
 

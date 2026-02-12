@@ -1,6 +1,6 @@
-﻿const Task = require("../models/Task");
+const Task = require("../models/Task");
 const Activity = require("../models/Activity");
-
+const { createTaskNotification } = require("../services/notificationService");
 
 const getTasks = async (req, res) => {
   const tasks = await Task.find({ userId: req.user.id }).sort({ createdAt: -1 });
@@ -20,12 +20,19 @@ const createTask = async (req, res) => {
     status: status || "pending",
     userId: req.user.id,
   });
+
   await Activity.create({
     userId: req.user.id,
     action: "created",
     entityId: task._id,
     entityType: "task",
     message: `Task "${task.title}" created`,
+  });
+
+  await createTaskNotification({
+    userId: req.user.id,
+    task,
+    type: "task_created",
   });
 
   return res.status(201).json(task);
@@ -40,16 +47,19 @@ const updateTask = async (req, res) => {
     return res.status(404).json({ message: "Task not found." });
   }
 
+  const previousStatus = task.status;
   if (title !== undefined) task.title = title;
   if (description !== undefined) task.description = description;
   if (status !== undefined) task.status = status;
 
   await task.save();
 
-  let action = "updated";
-  if (status !== undefined && status !== task.status) {
-    action = status === "completed" ? "completed" : "updated";
-  }
+  const action =
+    status !== undefined &&
+    status === "completed" &&
+    previousStatus !== "completed"
+      ? "completed"
+      : "updated";
 
   await Activity.create({
     userId: req.user.id,
@@ -57,6 +67,12 @@ const updateTask = async (req, res) => {
     entityId: task._id,
     entityType: "task",
     message: `Task "${task.title}" ${action}`,
+  });
+
+  await createTaskNotification({
+    userId: req.user.id,
+    task,
+    type: action === "completed" ? "task_completed" : "task_updated",
   });
 
   return res.status(200).json(task);
@@ -69,6 +85,7 @@ const deleteTask = async (req, res) => {
   if (!task) {
     return res.status(404).json({ message: "Task not found." });
   }
+
   await Activity.create({
     userId: req.user.id,
     action: "deleted",
@@ -77,8 +94,13 @@ const deleteTask = async (req, res) => {
     message: `Task "${task.title}" deleted`,
   });
 
+  await createTaskNotification({
+    userId: req.user.id,
+    task,
+    type: "task_deleted",
+  });
+
   return res.status(200).json({ message: "Task deleted." });
 };
 
 module.exports = { getTasks, createTask, updateTask, deleteTask };
-    

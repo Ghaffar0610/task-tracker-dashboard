@@ -7,6 +7,7 @@ const taskRoutes = require("./routes/taskRoutes");
 const activityRoutes = require("./routes/activityRoutes");
 const userRoutes = require("./routes/userRoutes");
 const focusRoutes = require("./routes/focusRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 const path = require("path");
 
 dotenv.config();
@@ -59,6 +60,7 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/activities", activityRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/focus", focusRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use((err, _req, res, _next) => {
   if (err?.message === "Not allowed by CORS") {
