@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 function Offline() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const [notice, setNotice] = useState("");
 
   const goHomePath = useMemo(
     () => (isAuthenticated ? "/dashboard" : "/"),
@@ -16,7 +17,15 @@ function Offline() {
       navigate(goHomePath, { replace: true });
       return;
     }
-    window.location.reload();
+    setNotice("Still offline. Reconnect to continue.");
+  };
+
+  const handleGoHome = () => {
+    if (!navigator.onLine) {
+      setNotice("Go Home works after internet reconnects.");
+      return;
+    }
+    navigate(goHomePath, { replace: true });
   };
 
   return (
@@ -39,12 +48,13 @@ function Offline() {
           </button>
           <button
             type="button"
-            onClick={() => navigate(goHomePath, { replace: true })}
+            onClick={handleGoHome}
             className="rounded-md border border-gray-200 px-5 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
           >
             Go Home
           </button>
         </div>
+        {notice ? <p className="mt-4 text-sm text-amber-600">{notice}</p> : null}
       </div>
     </div>
   );
