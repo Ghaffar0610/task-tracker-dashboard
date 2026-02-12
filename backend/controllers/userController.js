@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const { generateRecoveryCodes } = require("../services/recoveryCodeService");
 const notificationTypes = [
   "task_created",
   "task_updated",
@@ -128,10 +129,49 @@ const updateNotificationPreferences = async (req, res) => {
   });
 };
 
+const getRecoveryCodeStatus = async (req, res) => {
+  const user = await User.findById(req.user.id).select(
+    "+recoveryCodes recoveryCodesGeneratedAt"
+  );
+  if (!user) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  const total = (user.recoveryCodes || []).length;
+  const remaining = (user.recoveryCodes || []).filter((entry) => !entry.usedAt)
+    .length;
+
+  return res.status(200).json({
+    hasRecoveryCodes: total > 0,
+    total,
+    remaining,
+    generatedAt: user.recoveryCodesGeneratedAt || null,
+  });
+};
+
+const regenerateRecoveryCodes = async (req, res) => {
+  const user = await User.findById(req.user.id).select("+recoveryCodes");
+  if (!user) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  const { plainCodes, hashedCodes } = generateRecoveryCodes();
+  user.recoveryCodes = hashedCodes;
+  user.recoveryCodesGeneratedAt = new Date();
+  await user.save();
+
+  return res.status(200).json({
+    recoveryCodes: plainCodes,
+    generatedAt: user.recoveryCodesGeneratedAt,
+  });
+};
+
 module.exports = {
   getMe,
   updateMe,
   changePassword,
   getNotificationPreferences,
   updateNotificationPreferences,
+  getRecoveryCodeStatus,
+  regenerateRecoveryCodes,
 };

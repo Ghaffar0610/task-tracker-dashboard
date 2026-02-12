@@ -1,6 +1,14 @@
-﻿const bcrypt = require("bcryptjs");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { consumeRecoveryCode } = require("../services/recoveryCodeService");
+
+const defaultNotificationTypes = [
+  "task_created",
+  "task_updated",
+  "task_completed",
+  "task_deleted",
+];
 
 const createToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
@@ -8,18 +16,34 @@ const createToken = (userId) => {
   });
 };
 
+const toUserPayload = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  avatarUrl: user.avatarUrl || "",
+  emailNotificationsEnabled: Boolean(user.emailNotificationsEnabled),
+  emailNotificationTypes:
+    user.emailNotificationTypes && user.emailNotificationTypes.length > 0
+      ? user.emailNotificationTypes
+      : defaultNotificationTypes,
+});
+
 const register = async (req, res) => {
   const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
     return res.status(400).json({ message: "All fields are required." });
   }
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     return res.status(400).json({ message: "Invalid email address." });
   }
+
   if (password.length < 6) {
-    return res.status(400).json({ message: "Password must be at least 6 characters." });
+    return res
+      .status(400)
+      .json({ message: "Password must be at least 6 characters." });
   }
 
   const existing = await User.findOne({ email });
@@ -33,17 +57,7 @@ const register = async (req, res) => {
   const token = createToken(user._id);
   return res.status(201).json({
     token,
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      avatarUrl: user.avatarUrl || "",
-      emailNotificationsEnabled: Boolean(user.emailNotificationsEnabled),
-      emailNotificationTypes:
-        user.emailNotificationTypes && user.emailNotificationTypes.length > 0
-          ? user.emailNotificationTypes
-          : ["task_created", "task_updated", "task_completed", "task_deleted"],
-    },
+    user: toUserPayload(user),
   });
 };
 
@@ -53,12 +67,16 @@ const login = async (req, res) => {
   if (!email || !password) {
     return res.status(400).json({ message: "Email and password are required." });
   }
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     return res.status(400).json({ message: "Invalid email address." });
   }
+
   if (password.length < 6) {
-    return res.status(400).json({ message: "Password must be at least 6 characters." });
+    return res
+      .status(400)
+      .json({ message: "Password must be at least 6 characters." });
   }
 
   const user = await User.findOne({ email });
@@ -74,18 +92,44 @@ const login = async (req, res) => {
   const token = createToken(user._id);
   return res.status(200).json({
     token,
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      avatarUrl: user.avatarUrl || "",
-      emailNotificationsEnabled: Boolean(user.emailNotificationsEnabled),
-      emailNotificationTypes:
-        user.emailNotificationTypes && user.emailNotificationTypes.length > 0
-          ? user.emailNotificationTypes
-          : ["task_created", "task_updated", "task_completed", "task_deleted"],
-    },
+    user: toUserPayload(user),
   });
 };
 
-module.exports = { register, login };
+const resetPasswordWithRecoveryCode = async (req, res) => {
+  const { email, recoveryCode, newPassword } = req.body;
+
+  if (!email || !recoveryCode || !newPassword) {
+    return res.status(400).json({
+      message: "Email, recovery code, and new password are required.",
+    });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Invalid email address." });
+  }
+
+  if (newPassword.length < 6) {
+    return res
+      .status(400)
+      .json({ message: "Password must be at least 6 characters." });
+  }
+
+  const user = await User.findOne({ email }).select("+recoveryCodes");
+  if (!user) {
+    return res.status(401).json({ message: "Invalid email or recovery code." });
+  }
+
+  const consumed = consumeRecoveryCode(user, recoveryCode);
+  if (!consumed) {
+    return res.status(401).json({ message: "Invalid email or recovery code." });
+  }
+
+  user.password = await bcrypt.hash(newPassword, 10);
+  await user.save();
+
+  return res.status(200).json({ message: "Password reset successful." });
+};
+
+module.exports = { register, login, resetPasswordWithRecoveryCode };

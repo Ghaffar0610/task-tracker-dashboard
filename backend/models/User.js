@@ -33,6 +33,29 @@ const userSchema = new mongoose.Schema(
       enum: ["task_created", "task_updated", "task_completed", "task_deleted"],
       default: ["task_created", "task_updated", "task_completed", "task_deleted"],
     },
+    recoveryCodes: {
+      type: [
+        new mongoose.Schema(
+          {
+            codeHash: {
+              type: String,
+              required: true,
+            },
+            usedAt: {
+              type: Date,
+              default: null,
+            },
+          },
+          { _id: false }
+        ),
+      ],
+      default: [],
+      select: false,
+    },
+    recoveryCodesGeneratedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

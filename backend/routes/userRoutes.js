@@ -7,6 +7,8 @@ const {
   changePassword,
   getNotificationPreferences,
   updateNotificationPreferences,
+  getRecoveryCodeStatus,
+  regenerateRecoveryCodes,
 } = require("../controllers/userController");
 
 const router = express.Router();
@@ -27,5 +29,7 @@ router.put("/me", upload.single("avatar"), updateMe);
 router.put("/me/password", changePassword);
 router.get("/me/notification-preferences", getNotificationPreferences);
 router.put("/me/notification-preferences", updateNotificationPreferences);
+router.get("/me/recovery-codes/status", getRecoveryCodeStatus);
+router.post("/me/recovery-codes/regenerate", regenerateRecoveryCodes);
 
 module.exports = router;

@@ -20,6 +20,10 @@ const ProfileModal = ({ isOpen, onClose }) => {
   const [passwordSuccess, setPasswordSuccess] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [recoveryCodes, setRecoveryCodes] = useState([]);
+  const [recoveryError, setRecoveryError] = useState("");
+  const [recoverySuccess, setRecoverySuccess] = useState("");
+  const [isGeneratingRecoveryCodes, setIsGeneratingRecoveryCodes] = useState(false);
   const passwordSectionRef = useRef(null);
 
   useEffect(() => {
@@ -36,6 +40,9 @@ const ProfileModal = ({ isOpen, onClose }) => {
       setPasswordError("");
       setPasswordSuccess("");
       setShowPasswordForm(false);
+      setRecoveryCodes([]);
+      setRecoveryError("");
+      setRecoverySuccess("");
     }
   }, [isOpen, user?.name]);
 
@@ -151,6 +158,35 @@ const ProfileModal = ({ isOpen, onClose }) => {
       setPasswordError("Unable to reach the server.");
     } finally {
       setIsChangingPassword(false);
+    }
+  };
+
+  const handleGenerateRecoveryCodes = async () => {
+    setRecoveryError("");
+    setRecoverySuccess("");
+    setIsGeneratingRecoveryCodes(true);
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/users/me/recovery-codes/regenerate`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        setRecoveryError(data.message || "Unable to generate recovery codes.");
+        setIsGeneratingRecoveryCodes(false);
+        return;
+      }
+      setRecoveryCodes(data.recoveryCodes || []);
+      setRecoverySuccess(
+        "New recovery codes generated. Save them now. Old codes no longer work."
+      );
+    } catch (_err) {
+      setRecoveryError("Unable to reach the server.");
+    } finally {
+      setIsGeneratingRecoveryCodes(false);
     }
   };
 
@@ -318,6 +354,46 @@ const ProfileModal = ({ isOpen, onClose }) => {
                     </button>
                   </div>
                 </form>
+              ) : null}
+            </div>
+
+            <div className="border-t border-gray-100 pt-4 space-y-3">
+              <h3 className="text-sm font-semibold text-[#1e293b]">
+                Account Recovery Codes
+              </h3>
+              <p className="text-xs text-gray-500">
+                Use these codes to reset password if you forget it. Each code
+                can be used once.
+              </p>
+              <button
+                type="button"
+                onClick={handleGenerateRecoveryCodes}
+                disabled={isGeneratingRecoveryCodes}
+                className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+              >
+                {isGeneratingRecoveryCodes
+                  ? "Generating..."
+                  : "Generate New Recovery Codes"}
+              </button>
+              {recoveryError ? (
+                <p className="text-sm text-red-500">{recoveryError}</p>
+              ) : null}
+              {recoverySuccess ? (
+                <p className="text-sm text-green-600">{recoverySuccess}</p>
+              ) : null}
+              {recoveryCodes.length > 0 ? (
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    {recoveryCodes.map((code) => (
+                      <code
+                        key={code}
+                        className="rounded bg-white px-2 py-1 text-xs font-semibold text-gray-700"
+                      >
+                        {code}
+                      </code>
+                    ))}
+                  </div>
+                </div>
               ) : null}
             </div>
           </div>
