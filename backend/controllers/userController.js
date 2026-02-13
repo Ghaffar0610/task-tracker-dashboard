@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const { generateRecoveryCodes } = require("../services/recoveryCodeService");
+const { ensureUserHasReferralCode } = require("../services/referralService");
 const notificationTypes = [
   "task_created",
   "task_updated",
@@ -32,6 +33,11 @@ const getMe = async (req, res) => {
   if (!user) {
     return res.status(404).json({ message: "User not found." });
   }
+
+  if (!user.referralCode || !String(user.referralCode).trim()) {
+    user.referralCode = await ensureUserHasReferralCode(user._id);
+  }
+
   return res.status(200).json(toUserPayload(user));
 };
 

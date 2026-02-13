@@ -2,7 +2,11 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { consumeRecoveryCode } = require("../services/recoveryCodeService");
-const crypto = require("crypto");
+const {
+  ensureUniqueReferralCode,
+  ensureUserHasReferralCode,
+  awardReferralChainPoints,
+} = require("../services/referralService");
 
 const defaultNotificationTypes = [
   "task_created",
@@ -12,19 +16,6 @@ const defaultNotificationTypes = [
 ];
 
 const normalizeEmail = (value = "") => value.trim().toLowerCase();
-
-const generateReferralCode = () => {
-  return crypto.randomBytes(5).toString("hex");
-};
-
-const ensureUniqueReferralCode = async () => {
-  for (let attempts = 0; attempts < 5; attempts += 1) {
-    const code = generateReferralCode();
-    const exists = await User.exists({ referralCode: code });
-    if (!exists) return code;
-  }
-  throw new Error("Unable to generate referral code.");
-};
 
 const createToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
@@ -93,13 +84,8 @@ const register = async (req, res) => {
   });
 
   if (referrer) {
-    // Simple reward system: referrer earns points per successful signup.
-    await User.updateOne(
-      { _id: referrer._id },
-      { $inc: { referralPoints: 100, referralsCount: 1 } }
-    );
-    // Small welcome bonus for the new user.
-    await User.updateOne({ _id: user._id }, { $inc: { referralPoints: 25 } });
+    // Only referrers earn points. Unlimited chain.
+    await awardReferralChainPoints({ directReferrerId: referrer._id });
   }
 
   const refreshed = await User.findById(user._id);
@@ -137,6 +123,12 @@ const login = async (req, res) => {
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
     return res.status(401).json({ message: "Invalid credentials." });
+  }
+
+  // Ensure old accounts get a referral code so the invite link always shows.
+  if (!user.referralCode || !String(user.referralCode).trim()) {
+    const code = await ensureUserHasReferralCode(user._id);
+    user.referralCode = code || "";
   }
 
   const token = createToken(user._id);
