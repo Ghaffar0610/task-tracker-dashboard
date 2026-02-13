@@ -10,4 +10,8 @@
   body {
     @apply bg-[#f3f4f9] text-slate-900 overflow-x-hidden;
   }
+
+  body.theme-dark {
+    @apply bg-slate-900 text-slate-100;
+  }
 }

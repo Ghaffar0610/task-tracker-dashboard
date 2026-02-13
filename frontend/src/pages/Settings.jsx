@@ -1,98 +1,102 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Layout from "../components/Layout";
 import PageHeader from "../components/PageHeader";
 import NotificationBell from "../components/NotificationBell";
 import UserProfileButton from "../components/UserProfileButton";
 import { useAuth } from "../context/AuthContext";
-import { API_BASE_URL } from "../config/api";
+
+const STORAGE_KEY = "tt-settings";
 
 const sections = [
   { id: "profile", label: "Profile" },
   { id: "security", label: "Account & Security" },
   { id: "appearance", label: "Appearance" },
   { id: "workspace", label: "Workspace / Team" },
-  { id: "calendar", label: "Calendar Integration" },
+  { id: "calendar", label: "Calendar" },
   { id: "about", label: "About & Support" },
 ];
 
 const inputClass =
   "w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200";
 
+const getStoredSettings = () => {
+  try {
+    const value = localStorage.getItem(STORAGE_KEY);
+    return value ? JSON.parse(value) : {};
+  } catch {
+    return {};
+  }
+};
+
+const saveStoredSettings = (nextSettings) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(nextSettings));
+};
+
+const applyTheme = (theme) => {
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const shouldUseDark = theme === "dark" || (theme === "system" && prefersDark);
+  document.body.classList.toggle("theme-dark", shouldUseDark);
+};
+
 const Settings = () => {
-  const { token, user, updateUser } = useAuth();
+  const { user, updateUser } = useAuth();
+  const stored = getStoredSettings();
+
   const [activeSection, setActiveSection] = useState("profile");
   const [savingSection, setSavingSection] = useState("");
   const [feedback, setFeedback] = useState({ type: "", message: "" });
 
   const [profileForm, setProfileForm] = useState({
-    name: user?.name || "",
-    avatarUrl: user?.avatarUrl || "",
-    timezone: user?.timezone || "UTC",
-    language: user?.language || "English",
+    name: user?.name || stored.profile?.name || "",
+    avatarUrl: user?.avatarUrl || stored.profile?.avatarUrl || "",
+    timezone: stored.profile?.timezone || "UTC",
+    language: stored.profile?.language || "English",
   });
 
   const [securityForm, setSecurityForm] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
-    twoFactorEnabled: Boolean(user?.twoFactorEnabled),
-    revokeOtherSessions: false,
+    twoFactorEnabled: Boolean(stored.security?.twoFactorEnabled),
   });
 
   const [appearanceForm, setAppearanceForm] = useState({
-    theme: "system",
-    density: "cozy",
+    theme: stored.appearance?.theme || "system",
   });
 
   const [workspaceForm, setWorkspaceForm] = useState({
-    teamName: user?.teamName || "",
+    teamName: stored.workspace?.teamName || "",
     inviteEmail: "",
-    defaultRole: "member",
-    allowMemberInvites: false,
+    defaultRole: stored.workspace?.defaultRole || "member",
   });
 
   const [calendarForm, setCalendarForm] = useState({
-    provider: "google",
-    syncMode: "read_write",
-    defaultCalendar: "primary",
-    connected: false,
+    connected: Boolean(stored.calendar?.connected),
+    syncTasks: Boolean(stored.calendar?.syncTasks),
   });
+
+  useEffect(() => {
+    applyTheme(appearanceForm.theme);
+  }, [appearanceForm.theme]);
 
   const activeLabel = useMemo(
     () => sections.find((section) => section.id === activeSection)?.label || "",
     [activeSection]
   );
 
-  const patchSettings = async (section, payload) => {
-    const response = await fetch(`${API_BASE_URL}/api/settings/${section}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(data.message || "Unable to save changes.");
-    }
-
-    return data;
-  };
-
   const runSave = async ({ section, payload, onSuccess }) => {
     setSavingSection(section);
     setFeedback({ type: "", message: "" });
     try {
-      await patchSettings(section, payload);
+      const nextSettings = {
+        ...getStoredSettings(),
+        [section]: payload,
+      };
+      saveStoredSettings(nextSettings);
       onSuccess?.();
-      setFeedback({ type: "success", message: "Changes saved." });
-    } catch (error) {
-      setFeedback({
-        type: "error",
-        message: error.message || "Unable to save changes.",
-      });
+      setFeedback({ type: "success", message: "Saved." });
+    } catch {
+      setFeedback({ type: "error", message: "Unable to save." });
     } finally {
       setSavingSection("");
     }
@@ -109,14 +113,17 @@ const Settings = () => {
 
   const handleSecuritySave = (event) => {
     event.preventDefault();
+    if (!securityForm.newPassword || !securityForm.confirmPassword) {
+      setFeedback({ type: "error", message: "Enter new password fields." });
+      return;
+    }
     if (securityForm.newPassword !== securityForm.confirmPassword) {
       setFeedback({ type: "error", message: "New passwords do not match." });
       return;
     }
-
     runSave({
       section: "security",
-      payload: securityForm,
+      payload: { twoFactorEnabled: securityForm.twoFactorEnabled },
       onSuccess: () =>
         setSecurityForm((prev) => ({
           ...prev,
@@ -129,7 +136,11 @@ const Settings = () => {
 
   const handleAppearanceSave = (event) => {
     event.preventDefault();
-    runSave({ section: "appearance", payload: appearanceForm });
+    runSave({
+      section: "appearance",
+      payload: appearanceForm,
+      onSuccess: () => applyTheme(appearanceForm.theme),
+    });
   };
 
   const handleWorkspaceSave = (event) => {
@@ -148,26 +159,6 @@ const Settings = () => {
   const handleCalendarSave = (event) => {
     event.preventDefault();
     runSave({ section: "calendar", payload: calendarForm });
-  };
-
-  const handleConnectCalendar = () => {
-    runSave({
-      section: "calendar/connect",
-      payload: { provider: calendarForm.provider },
-      onSuccess: () => {
-        setCalendarForm((prev) => ({ ...prev, connected: true }));
-      },
-    });
-  };
-
-  const handleDisconnectCalendar = () => {
-    runSave({
-      section: "calendar/disconnect",
-      payload: { provider: calendarForm.provider },
-      onSuccess: () => {
-        setCalendarForm((prev) => ({ ...prev, connected: false }));
-      },
-    });
   };
 
   return (
@@ -372,21 +363,6 @@ const Settings = () => {
                 />
                 <span className="text-sm text-gray-700">Enable 2FA</span>
               </label>
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={securityForm.revokeOtherSessions}
-                  onChange={(event) =>
-                    setSecurityForm((prev) => ({
-                      ...prev,
-                      revokeOtherSessions: event.target.checked,
-                    }))
-                  }
-                />
-                <span className="text-sm text-gray-700">
-                  Sign out from other sessions after save
-                </span>
-              </label>
               <button
                 type="submit"
                 className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
@@ -399,51 +375,29 @@ const Settings = () => {
 
           {activeSection === "appearance" ? (
             <form className="space-y-4" onSubmit={handleAppearanceSave}>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <label className="space-y-2">
-                  <span className="text-sm font-semibold text-gray-600">Theme</span>
-                  <select
-                    className={inputClass}
-                    value={appearanceForm.theme}
-                    onChange={(event) =>
-                      setAppearanceForm((prev) => ({
-                        ...prev,
-                        theme: event.target.value,
-                      }))
-                    }
-                  >
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                    <option value="system">System</option>
-                  </select>
-                </label>
-                <label className="space-y-2">
-                  <span className="text-sm font-semibold text-gray-600">
-                    Density
-                  </span>
-                  <select
-                    className={inputClass}
-                    value={appearanceForm.density}
-                    onChange={(event) =>
-                      setAppearanceForm((prev) => ({
-                        ...prev,
-                        density: event.target.value,
-                      }))
-                    }
-                  >
-                    <option value="compact">Compact</option>
-                    <option value="cozy">Cozy</option>
-                  </select>
-                </label>
-              </div>
+              <label className="space-y-2 block max-w-sm">
+                <span className="text-sm font-semibold text-gray-600">Theme</span>
+                <select
+                  className={inputClass}
+                  value={appearanceForm.theme}
+                  onChange={(event) =>
+                    setAppearanceForm((prev) => ({
+                      ...prev,
+                      theme: event.target.value,
+                    }))
+                  }
+                >
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                  <option value="system">System</option>
+                </select>
+              </label>
               <button
                 type="submit"
                 className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
                 disabled={savingSection === "appearance"}
               >
-                {savingSection === "appearance"
-                  ? "Saving..."
-                  : "Save Appearance"}
+                {savingSection === "appearance" ? "Saving..." : "Save Theme"}
               </button>
             </form>
           ) : null}
@@ -503,21 +457,6 @@ const Settings = () => {
                   </select>
                 </label>
               </div>
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={workspaceForm.allowMemberInvites}
-                  onChange={(event) =>
-                    setWorkspaceForm((prev) => ({
-                      ...prev,
-                      allowMemberInvites: event.target.checked,
-                    }))
-                  }
-                />
-                <span className="text-sm text-gray-700">
-                  Allow members to invite others
-                </span>
-              </label>
               <button
                 type="submit"
                 className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
@@ -530,122 +469,71 @@ const Settings = () => {
 
           {activeSection === "calendar" ? (
             <form className="space-y-4" onSubmit={handleCalendarSave}>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <label className="space-y-2">
-                  <span className="text-sm font-semibold text-gray-600">
-                    Provider
-                  </span>
-                  <select
-                    className={inputClass}
-                    value={calendarForm.provider}
-                    onChange={(event) =>
-                      setCalendarForm((prev) => ({
-                        ...prev,
-                        provider: event.target.value,
-                      }))
-                    }
-                  >
-                    <option value="google">Google Calendar</option>
-                    <option value="outlook">Outlook Calendar</option>
-                  </select>
-                </label>
-                <label className="space-y-2">
-                  <span className="text-sm font-semibold text-gray-600">
-                    Sync mode
-                  </span>
-                  <select
-                    className={inputClass}
-                    value={calendarForm.syncMode}
-                    onChange={(event) =>
-                      setCalendarForm((prev) => ({
-                        ...prev,
-                        syncMode: event.target.value,
-                      }))
-                    }
-                  >
-                    <option value="read_write">Two-way sync</option>
-                    <option value="read_only">Read only</option>
-                  </select>
-                </label>
+              <div className="rounded-md border border-gray-100 bg-gray-50 p-4">
+                <p className="text-sm font-semibold text-gray-700">
+                  Google Calendar
+                </p>
+                <p className="mt-1 text-sm text-gray-500">
+                  Single calendar integration for task sync.
+                </p>
               </div>
-              <label className="space-y-2 block">
-                <span className="text-sm font-semibold text-gray-600">
-                  Default calendar
-                </span>
+              <label className="flex items-center gap-3">
                 <input
-                  className={inputClass}
-                  value={calendarForm.defaultCalendar}
+                  type="checkbox"
+                  checked={calendarForm.connected}
                   onChange={(event) =>
                     setCalendarForm((prev) => ({
                       ...prev,
-                      defaultCalendar: event.target.value,
+                      connected: event.target.checked,
                     }))
                   }
                 />
+                <span className="text-sm text-gray-700">Connected</span>
               </label>
-
-              <div className="flex flex-wrap gap-3">
-                {calendarForm.connected ? (
-                  <button
-                    type="button"
-                    onClick={handleDisconnectCalendar}
-                    className="rounded-md border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
-                    disabled={savingSection === "calendar/disconnect"}
-                  >
-                    {savingSection === "calendar/disconnect"
-                      ? "Disconnecting..."
-                      : "Disconnect"}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleConnectCalendar}
-                    className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
-                    disabled={savingSection === "calendar/connect"}
-                  >
-                    {savingSection === "calendar/connect"
-                      ? "Connecting..."
-                      : "Connect Calendar"}
-                  </button>
-                )}
-                <button
-                  type="submit"
-                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
-                  disabled={savingSection === "calendar"}
-                >
-                  {savingSection === "calendar"
-                    ? "Saving..."
-                    : "Save Calendar Settings"}
-                </button>
-              </div>
+              <label className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={calendarForm.syncTasks}
+                  onChange={(event) =>
+                    setCalendarForm((prev) => ({
+                      ...prev,
+                      syncTasks: event.target.checked,
+                    }))
+                  }
+                />
+                <span className="text-sm text-gray-700">
+                  Sync task due dates
+                </span>
+              </label>
+              <button
+                type="submit"
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
+                disabled={savingSection === "calendar"}
+              >
+                {savingSection === "calendar"
+                  ? "Saving..."
+                  : "Save Calendar Settings"}
+              </button>
             </form>
           ) : null}
 
           {activeSection === "about" ? (
             <div className="space-y-4">
               <div className="rounded-md border border-gray-100 bg-gray-50 p-4">
-                <p className="text-sm text-gray-500">Current Version</p>
+                <p className="text-sm text-gray-500">Task Tracker Dashboard</p>
                 <p className="mt-1 text-lg font-semibold text-[#1e293b]">v1.0.0</p>
               </div>
-              <div className="flex flex-wrap gap-3">
-                <a
-                  href="/changelog"
-                  className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                >
-                  View Changelog
-                </a>
-                <a
-                  href="mailto:support@tasktracker.app"
-                  className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                >
-                  Contact Support
-                </a>
-                <a
-                  href="mailto:bugs@tasktracker.app"
-                  className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                >
-                  Report an Issue
-                </a>
+              <div className="rounded-md border border-gray-100 p-4">
+                <p className="text-sm text-gray-600">
+                  For support, use:
+                  {" "}
+                  <a
+                    href="mailto:support@tasktracker.app"
+                    className="font-semibold text-blue-600 hover:underline"
+                  >
+                    support@tasktracker.app
+                  </a>
+                </p>
               </div>
             </div>
           ) : null}
