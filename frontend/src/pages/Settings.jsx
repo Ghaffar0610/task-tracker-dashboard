@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PageHeader from "../components/PageHeader";
 import NotificationBell from "../components/NotificationBell";
 import UserProfileButton from "../components/UserProfileButton";
+import CalendarQuickView from "../components/CalendarQuickView";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL } from "../config/api";
 import { applyTheme } from "../utils/theme";
@@ -37,10 +38,41 @@ const Settings = () => {
     defaultRole: user?.workspaceDefaultRole || "member",
   });
 
+  const [referrals, setReferrals] = useState([]);
+  const [referralsLoading, setReferralsLoading] = useState(false);
+  const [referralsError, setReferralsError] = useState("");
+
   const activeLabel = useMemo(
     () => sections.find((section) => section.id === activeSection)?.label || "",
     [activeSection]
   );
+
+  useEffect(() => {
+    if (activeSection !== "workspace" || !token) return;
+
+    const load = async () => {
+      setReferralsLoading(true);
+      setReferralsError("");
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/users/me/referrals`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setReferralsError(data.message || "Unable to load team members.");
+          setReferralsLoading(false);
+          return;
+        }
+        setReferrals(Array.isArray(data) ? data : []);
+      } catch {
+        setReferralsError("Unable to reach the server.");
+      } finally {
+        setReferralsLoading(false);
+      }
+    };
+
+    load();
+  }, [activeSection, token]);
 
   const authedFetchJson = async (url, { method, body }) => {
     const response = await fetch(url, {
@@ -142,6 +174,7 @@ const Settings = () => {
         right={
           <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-4">
             <NotificationBell />
+            <CalendarQuickView />
             <UserProfileButton />
           </div>
         }
@@ -281,7 +314,7 @@ const Settings = () => {
             <form className="space-y-4" onSubmit={handleWorkspaceSave}>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <label className="space-y-2 md:col-span-2">
-                  <span className="text-sm font-semibold text-gray-600">
+                  <span className="text-sm font-semibold text-gray-600 dark:text-slate-300">
                     Workspace Name
                   </span>
                   <input
@@ -296,7 +329,7 @@ const Settings = () => {
                   />
                 </label>
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-gray-600">
+                  <span className="text-sm font-semibold text-gray-600 dark:text-slate-300">
                     Default role
                   </span>
                   <select
@@ -315,6 +348,93 @@ const Settings = () => {
                   </select>
                 </label>
               </div>
+
+              <div className="rounded-lg border border-gray-100 bg-gray-50 p-4 dark:border-slate-800 dark:bg-slate-900/40">
+                <p className="text-sm font-semibold text-gray-700 dark:text-slate-100">
+                  Invite via referral
+                </p>
+                <p className="mt-1 text-sm text-gray-500 dark:text-slate-300">
+                  Share your link. When someone signs up with it, you earn points.
+                </p>
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <div className="rounded-md border border-gray-200 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-900">
+                    <p className="text-xs font-semibold text-gray-500 dark:text-slate-400">
+                      Your Points
+                    </p>
+                    <p className="mt-1 text-lg font-bold text-gray-800 dark:text-slate-100">
+                      {user?.referralPoints ?? 0}
+                    </p>
+                  </div>
+                  <div className="rounded-md border border-gray-200 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-900">
+                    <p className="text-xs font-semibold text-gray-500 dark:text-slate-400">
+                      Members Referred
+                    </p>
+                    <p className="mt-1 text-lg font-bold text-gray-800 dark:text-slate-100">
+                      {user?.referralsCount ?? 0}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex flex-col gap-2 md:flex-row md:items-center">
+                  <input
+                    readOnly
+                    className={inputClass}
+                    value={
+                      user?.referralCode
+                        ? `${window.location.origin}/register?ref=${user.referralCode}`
+                        : "Referral code not ready yet."
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-900"
+                    disabled={!user?.referralCode}
+                    onClick={async () => {
+                      if (!user?.referralCode) return;
+                      await navigator.clipboard.writeText(
+                        `${window.location.origin}/register?ref=${user.referralCode}`
+                      );
+                      setFeedback({ type: "success", message: "Invite link copied." });
+                    }}
+                  >
+                    Copy Link
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-gray-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                <p className="text-sm font-semibold text-gray-700 dark:text-slate-100">
+                  Team Members (Referred)
+                </p>
+                {referralsError ? (
+                  <p className="mt-2 text-sm text-red-600">{referralsError}</p>
+                ) : referralsLoading ? (
+                  <p className="mt-2 text-sm text-gray-500 dark:text-slate-300">
+                    Loading members...
+                  </p>
+                ) : referrals.length === 0 ? (
+                  <p className="mt-2 text-sm text-gray-500 dark:text-slate-300">
+                    No members yet.
+                  </p>
+                ) : (
+                  <div className="mt-3 space-y-2">
+                    {referrals.map((member) => (
+                      <div
+                        key={member.id}
+                        className="flex flex-col gap-1 rounded-md border border-gray-100 bg-gray-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900/40"
+                      >
+                        <span className="font-semibold text-gray-700 dark:text-slate-100">
+                          {member.name || "Unnamed"}
+                        </span>
+                        <span className="text-gray-500 dark:text-slate-300">
+                          {member.email}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <button
                 type="submit"
                 className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"

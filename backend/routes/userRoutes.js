@@ -9,6 +9,7 @@ const {
   updateNotificationPreferences,
   getRecoveryCodeStatus,
   regenerateRecoveryCodes,
+  getReferrals,
 } = require("../controllers/userController");
 
 const router = express.Router();
@@ -29,6 +30,7 @@ router.get("/me", getMe);
 router.patch("/me", updateMe);
 router.put("/me", upload.single("avatar"), updateMe);
 router.put("/me/password", changePassword);
+router.get("/me/referrals", getReferrals);
 router.get("/me/notification-preferences", getNotificationPreferences);
 router.put("/me/notification-preferences", updateNotificationPreferences);
 router.get("/me/recovery-codes/status", getRecoveryCodeStatus);

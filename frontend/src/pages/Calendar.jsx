@@ -1,6 +1,7 @@
 import PageHeader from "../components/PageHeader";
 import NotificationBell from "../components/NotificationBell";
 import UserProfileButton from "../components/UserProfileButton";
+import CalendarQuickView from "../components/CalendarQuickView";
 
 const Calendar = () => {
   return (
@@ -10,6 +11,7 @@ const Calendar = () => {
         right={
           <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-4">
             <NotificationBell />
+            <CalendarQuickView />
             <UserProfileButton />
           </div>
         }
@@ -26,4 +28,3 @@ const Calendar = () => {
 };
 
 export default Calendar;
-

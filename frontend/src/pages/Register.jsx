@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL } from "../config/api";
 
 const Register = () => {
   const { isAuthenticated, login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,12 +41,13 @@ const Register = () => {
     }
 
     try {
+      const referralCode = searchParams.get("ref") || "";
       const response = await fetch(
         `${API_BASE_URL}/api/auth/register`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email, password }),
+          body: JSON.stringify({ name, email, password, referralCode }),
         }
       );
 
@@ -57,7 +59,7 @@ const Register = () => {
 
       login({ token: data.token, user: data.user, remember });
       navigate("/dashboard", { replace: true });
-    } catch (err) {
+    } catch {
       setError("Unable to reach the server.");
     }
   };

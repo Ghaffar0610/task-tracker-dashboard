@@ -15,6 +15,9 @@ const toUserPayload = (user) => ({
   uiTheme: user.uiTheme || "system",
   workspaceName: user.workspaceName || "",
   workspaceDefaultRole: user.workspaceDefaultRole || "member",
+  referralCode: user.referralCode || "",
+  referralPoints: user.referralPoints || 0,
+  referralsCount: user.referralsCount || 0,
   emailNotificationsEnabled: Boolean(user.emailNotificationsEnabled),
   emailNotificationTypes:
     user.emailNotificationTypes && user.emailNotificationTypes.length > 0
@@ -24,7 +27,7 @@ const toUserPayload = (user) => ({
 
 const getMe = async (req, res) => {
   const user = await User.findById(req.user.id).select(
-    "name email avatarUrl uiTheme workspaceName workspaceDefaultRole emailNotificationsEnabled emailNotificationTypes"
+    "name email avatarUrl uiTheme workspaceName workspaceDefaultRole referralCode referralPoints referralsCount emailNotificationsEnabled emailNotificationTypes"
   );
   if (!user) {
     return res.status(404).json({ message: "User not found." });
@@ -58,7 +61,7 @@ const updateMe = async (req, res) => {
     new: true,
     runValidators: true,
   }).select(
-    "name email avatarUrl uiTheme workspaceName workspaceDefaultRole emailNotificationsEnabled emailNotificationTypes"
+    "name email avatarUrl uiTheme workspaceName workspaceDefaultRole referralCode referralPoints referralsCount emailNotificationsEnabled emailNotificationTypes"
   );
 
   if (!user) {
@@ -66,6 +69,21 @@ const updateMe = async (req, res) => {
   }
 
   return res.status(200).json(toUserPayload(user));
+};
+
+const getReferrals = async (req, res) => {
+  const members = await User.find({ referredBy: req.user.id })
+    .select("name email createdAt")
+    .sort({ createdAt: -1 });
+
+  return res.status(200).json(
+    members.map((member) => ({
+      id: member._id,
+      name: member.name,
+      email: member.email,
+      createdAt: member.createdAt,
+    }))
+  );
 };
 
 const changePassword = async (req, res) => {
@@ -200,4 +218,5 @@ module.exports = {
   updateNotificationPreferences,
   getRecoveryCodeStatus,
   regenerateRecoveryCodes,
+  getReferrals,
 };

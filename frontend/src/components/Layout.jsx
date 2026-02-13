@@ -12,14 +12,14 @@ const Layout = ({ children }) => {
   }, [isSidebarOpen]);
 
   return (
-    <div className="min-h-[100dvh] bg-[#f3f4f9] md:flex">
+    <div className="min-h-[100dvh] bg-[#f3f4f9] text-slate-900 md:flex dark:bg-slate-950 dark:text-slate-100">
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-gray-200 bg-white/90 px-4 py-3 backdrop-blur md:hidden">
+        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-gray-200 bg-white/90 px-4 py-3 backdrop-blur md:hidden dark:border-slate-800 dark:bg-slate-900/80">
           <button
             type="button"
             onClick={() => setIsSidebarOpen(true)}
@@ -30,7 +30,9 @@ const Layout = ({ children }) => {
             <span className="absolute block h-0.5 w-5 -translate-y-1.5 bg-current"></span>
             <span className="absolute block h-0.5 w-5 bg-current"></span>
           </button>
-          <h1 className="text-base font-bold text-[#1e293b]">Task Tracker</h1>
+          <h1 className="text-base font-bold text-slate-900 dark:text-slate-100">
+            Task Tracker
+          </h1>
           <div className="w-11" />
         </div>
 

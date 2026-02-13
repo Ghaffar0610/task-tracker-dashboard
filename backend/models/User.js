@@ -39,6 +39,28 @@ const userSchema = new mongoose.Schema(
       enum: ["member", "admin", "viewer"],
       default: "member",
     },
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      default: "",
+    },
+    referredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    referralPoints: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    referralsCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     emailNotificationsEnabled: {
       type: Boolean,
       default: false,

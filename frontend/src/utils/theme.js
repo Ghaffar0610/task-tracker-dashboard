@@ -7,6 +7,5 @@ export const applyTheme = (theme) => {
     window.matchMedia("(prefers-color-scheme: dark)").matches;
 
   const shouldUseDark = theme === "dark" || (theme === "system" && prefersDark);
-  document.body.classList.toggle("theme-dark", Boolean(shouldUseDark));
+  document.documentElement.classList.toggle("dark", Boolean(shouldUseDark));
 };
-

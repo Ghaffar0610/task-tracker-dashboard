@@ -7,6 +7,7 @@ import PageHeader from "../components/PageHeader";
 import StatCard from "../components/StatCard";
 import UserProfileButton from "../components/UserProfileButton";
 import NotificationBell from "../components/NotificationBell";
+import CalendarQuickView from "../components/CalendarQuickView";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useTasks } from "../context/TaskContext";
@@ -143,6 +144,7 @@ const Dashboard = () => {
         right={
           <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-4">
             <NotificationBell />
+            <CalendarQuickView />
             <UserProfileButton />
           </div>
         }

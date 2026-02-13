@@ -6,6 +6,7 @@ import TaskCard from "../components/TaskCard";
 import TaskModal from "../components/TaskModal";
 import UserProfileButton from "../components/UserProfileButton";
 import NotificationBell from "../components/NotificationBell";
+import CalendarQuickView from "../components/CalendarQuickView";
 import { useTasks } from "../context/TaskContext";
 
 const Tasks = () => {
@@ -106,6 +107,7 @@ const Tasks = () => {
         right={
           <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-4">
             <NotificationBell />
+            <CalendarQuickView />
             <button
               type="button"
               onClick={openAddModal}

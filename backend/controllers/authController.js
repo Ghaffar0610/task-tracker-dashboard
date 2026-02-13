@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { consumeRecoveryCode } = require("../services/recoveryCodeService");
+const crypto = require("crypto");
 
 const defaultNotificationTypes = [
   "task_created",
@@ -11,6 +12,19 @@ const defaultNotificationTypes = [
 ];
 
 const normalizeEmail = (value = "") => value.trim().toLowerCase();
+
+const generateReferralCode = () => {
+  return crypto.randomBytes(5).toString("hex");
+};
+
+const ensureUniqueReferralCode = async () => {
+  for (let attempts = 0; attempts < 5; attempts += 1) {
+    const code = generateReferralCode();
+    const exists = await User.exists({ referralCode: code });
+    if (!exists) return code;
+  }
+  throw new Error("Unable to generate referral code.");
+};
 
 const createToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
@@ -26,6 +40,9 @@ const toUserPayload = (user) => ({
   uiTheme: user.uiTheme || "system",
   workspaceName: user.workspaceName || "",
   workspaceDefaultRole: user.workspaceDefaultRole || "member",
+  referralCode: user.referralCode || "",
+  referralPoints: user.referralPoints || 0,
+  referralsCount: user.referralsCount || 0,
   emailNotificationsEnabled: Boolean(user.emailNotificationsEnabled),
   emailNotificationTypes:
     user.emailNotificationTypes && user.emailNotificationTypes.length > 0
@@ -34,7 +51,7 @@ const toUserPayload = (user) => ({
 });
 
 const register = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, referralCode } = req.body;
 
   if (!name || !email || !password) {
     return res.status(400).json({ message: "All fields are required." });
@@ -57,17 +74,39 @@ const register = async (req, res) => {
     return res.status(409).json({ message: "Email already in use." });
   }
 
+  let referrer = null;
+  if (referralCode) {
+    referrer = await User.findOne({ referralCode: String(referralCode).trim() });
+    if (!referrer) {
+      return res.status(400).json({ message: "Invalid referral code." });
+    }
+  }
+
   const hashed = await bcrypt.hash(password, 10);
+  const userReferralCode = await ensureUniqueReferralCode();
   const user = await User.create({
     name,
     email: normalizedEmail,
     password: hashed,
+    referralCode: userReferralCode,
+    referredBy: referrer ? referrer._id : null,
   });
 
+  if (referrer) {
+    // Simple reward system: referrer earns points per successful signup.
+    await User.updateOne(
+      { _id: referrer._id },
+      { $inc: { referralPoints: 100, referralsCount: 1 } }
+    );
+    // Small welcome bonus for the new user.
+    await User.updateOne({ _id: user._id }, { $inc: { referralPoints: 25 } });
+  }
+
+  const refreshed = await User.findById(user._id);
   const token = createToken(user._id);
   return res.status(201).json({
     token,
-    user: toUserPayload(user),
+    user: toUserPayload(refreshed || user),
   });
 };
 
