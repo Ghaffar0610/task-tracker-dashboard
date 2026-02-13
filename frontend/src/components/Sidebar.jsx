@@ -70,6 +70,19 @@ const Sidebar = ({ isOpen, onClose }) => {
           </span>
           Tasks
         </NavLink>
+      </nav>
+
+      <nav className="mt-auto flex flex-col gap-2 border-t border-white/20 pt-4">
+        <NavLink
+          to="/settings"
+          className={linkClass}
+          onClick={() => onClose?.()}
+        >
+          <span className="flex h-5 w-5 items-center justify-center rounded-sm border-2 border-white text-[10px]">
+            S
+          </span>
+          Settings
+        </NavLink>
         <button
           className="flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-white/10"
           onClick={handleLogout}
