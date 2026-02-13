@@ -109,7 +109,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
       updateUser(data);
       setIsSaving(false);
       onClose();
-    } catch (err) {
+    } catch {
       setError("Unable to reach the server.");
       setIsSaving(false);
     }
@@ -156,7 +156,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (err) {
+    } catch {
       setPasswordError("Unable to reach the server.");
     } finally {
       setIsChangingPassword(false);
@@ -185,7 +185,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
       setRecoverySuccess(
         "New recovery codes generated. Save them now. Old codes no longer work."
       );
-    } catch (_err) {
+    } catch {
       setRecoveryError("Unable to reach the server.");
     } finally {
       setIsGeneratingRecoveryCodes(false);
@@ -201,8 +201,8 @@ const ProfileModal = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 bg-black/40">
       <div className="flex h-full w-full items-end justify-center px-4 pb-4 pt-8 sm:items-center sm:pb-0">
-        <div className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-xl bg-white shadow-xl">
-          <div className="relative border-b border-gray-200 px-4 py-4 sm:px-6">
+        <div className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-xl bg-white shadow-xl dark:bg-slate-950">
+          <div className="relative border-b border-gray-200 px-4 py-4 sm:px-6 dark:border-slate-800">
             <button
               type="button"
               onClick={handleLogout}
@@ -225,13 +225,13 @@ const ProfileModal = ({ isOpen, onClose }) => {
                 <path d="M21 12H9" />
               </svg>
             </button>
-            <h2 className="text-center text-lg font-semibold text-[#1e293b]">
+            <h2 className="text-center text-lg font-semibold text-[#1e293b] dark:text-slate-100">
               Edit Profile
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-xl text-gray-400 hover:text-gray-600"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-xl text-gray-400 hover:text-gray-600 dark:text-slate-400 dark:hover:text-slate-200"
             >
               x
             </button>
@@ -240,31 +240,31 @@ const ProfileModal = ({ isOpen, onClose }) => {
           <div className="space-y-6 px-4 py-5 sm:px-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-sm font-semibold text-gray-600">
+                <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
                   Name
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  className="mt-2 w-full rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  className="mt-2 w-full rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-gray-600">
+                <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
                   Profile Picture
                 </label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleFileChange}
-                  className="mt-2 w-full text-sm text-gray-700"
+                  className="mt-2 w-full text-sm text-gray-700 dark:text-slate-200"
                 />
               </div>
 
               {imageSrc ? (
-                <div className="relative h-64 w-full overflow-hidden rounded-lg bg-gray-100">
+                <div className="relative h-64 w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-slate-900">
                   <Cropper
                     image={imageSrc}
                     crop={crop}
@@ -280,7 +280,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
               {imageSrc ? (
                 <div>
-                  <label className="text-sm font-semibold text-gray-600">
+                  <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
                     Zoom
                   </label>
                   <input
@@ -301,7 +301,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-md border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                  className="rounded-md border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-900"
                   disabled={isSaving}
                 >
                   Cancel
@@ -318,7 +318,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
             <div
               ref={passwordSectionRef}
-              className="border-t border-gray-100 pt-4"
+              className="border-t border-gray-100 pt-4 dark:border-slate-800"
             >
               <button
                 type="button"
@@ -336,36 +336,36 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   className="mt-4 space-y-4"
                 >
                   <div>
-                    <label className="text-sm font-semibold text-gray-600">
+                    <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
                       Current Password
                     </label>
                     <input
                       type="password"
                       value={currentPassword}
                       onChange={(event) => setCurrentPassword(event.target.value)}
-                      className="mt-2 w-full rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                      className="mt-2 w-full rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-semibold text-gray-600">
+                    <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
                       New Password
                     </label>
                     <input
                       type="password"
                       value={newPassword}
                       onChange={(event) => setNewPassword(event.target.value)}
-                      className="mt-2 w-full rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                      className="mt-2 w-full rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-semibold text-gray-600">
+                    <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
                       Confirm Password
                     </label>
                     <input
                       type="password"
                       value={confirmPassword}
                       onChange={(event) => setConfirmPassword(event.target.value)}
-                      className="mt-2 w-full rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                      className="mt-2 w-full rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                     />
                   </div>
                   {passwordError ? (
@@ -387,11 +387,11 @@ const ProfileModal = ({ isOpen, onClose }) => {
               ) : null}
             </div>
 
-            <div className="border-t border-gray-100 pt-4 space-y-3">
-              <h3 className="text-sm font-semibold text-[#1e293b]">
+            <div className="border-t border-gray-100 pt-4 space-y-3 dark:border-slate-800">
+              <h3 className="text-sm font-semibold text-[#1e293b] dark:text-slate-100">
                 Account Recovery Codes
               </h3>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-slate-300">
                 Use these codes to reset password if you forget it. Each code
                 can be used once.
               </p>
@@ -399,7 +399,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                 type="button"
                 onClick={handleGenerateRecoveryCodes}
                 disabled={isGeneratingRecoveryCodes}
-                className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-900"
               >
                 {isGeneratingRecoveryCodes
                   ? "Generating..."
@@ -412,12 +412,12 @@ const ProfileModal = ({ isOpen, onClose }) => {
                 <p className="text-sm text-green-600">{recoverySuccess}</p>
               ) : null}
               {recoveryCodes.length > 0 ? (
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-800 dark:bg-slate-900/40">
                   <div className="grid grid-cols-2 gap-2">
                     {recoveryCodes.map((code) => (
                       <code
                         key={code}
-                        className="rounded bg-white px-2 py-1 text-xs font-semibold text-gray-700"
+                        className="rounded bg-white px-2 py-1 text-xs font-semibold text-gray-700 dark:bg-slate-950 dark:text-slate-100"
                       >
                         {code}
                       </code>
