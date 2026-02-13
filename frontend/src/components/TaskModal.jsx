@@ -18,15 +18,15 @@ const TaskModal = ({
   return createPortal(
     <div className="fixed inset-0 z-50 bg-black/40">
       <div className="flex h-full w-full items-end justify-center px-4 pb-4 pt-8 sm:items-center sm:pb-0">
-        <div className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-xl bg-white shadow-xl">
-          <div className="flex items-center justify-between border-b border-gray-200 px-4 py-4 sm:px-6">
-            <h2 className="text-lg font-semibold text-[#1e293b]">
+        <div className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-xl bg-white shadow-xl dark:bg-slate-950">
+          <div className="flex items-center justify-between border-b border-gray-200 px-4 py-4 sm:px-6 dark:border-slate-800">
+            <h2 className="text-lg font-semibold text-[#1e293b] dark:text-slate-100">
               {isEditing ? "Edit Task" : "Add Task"}
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className="text-xl text-gray-400 hover:text-gray-600"
+              className="text-xl text-gray-400 hover:text-gray-600 dark:text-slate-400 dark:hover:text-slate-200"
             >
               x
             </button>
@@ -34,37 +34,37 @@ const TaskModal = ({
 
           <form onSubmit={onSubmit} className="space-y-4 px-4 py-5 sm:px-6">
             <div>
-              <label className="text-sm font-semibold text-gray-600">
+              <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
                 Title
               </label>
               <input
                 type="text"
                 value={title}
                 onChange={onTitleChange}
-                className="mt-2 w-full rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                className="mt-2 w-full rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
               />
             </div>
 
             <div>
-              <label className="text-sm font-semibold text-gray-600">
+              <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
                 Description
               </label>
               <textarea
                 value={description}
                 onChange={onDescriptionChange}
                 rows={4}
-                className="mt-2 w-full rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                className="mt-2 w-full rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
               />
             </div>
 
             <div>
-              <label className="text-sm font-semibold text-gray-600">
+              <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
                 Status
               </label>
               <select
                 value={status}
                 onChange={onStatusChange}
-                className="mt-2 w-full rounded-md border border-gray-200 bg-white px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                className="mt-2 w-full rounded-md border border-gray-200 bg-white px-3 py-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
               >
                 <option value="pending">Pending</option>
                 <option value="completed">Completed</option>
@@ -73,11 +73,11 @@ const TaskModal = ({
 
             {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
-            <div className="flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end sm:gap-3">
+            <div className="flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end sm:gap-3 dark:border-slate-800">
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-md border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                className="rounded-md border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-900"
               >
                 Cancel
               </button>

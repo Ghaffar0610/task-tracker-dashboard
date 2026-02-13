@@ -70,16 +70,6 @@ const Sidebar = ({ isOpen, onClose }) => {
           </span>
           Tasks
         </NavLink>
-        <NavLink
-          to="/calendar"
-          className={linkClass}
-          onClick={() => onClose?.()}
-        >
-          <span className="flex h-5 w-5 items-center justify-center rounded-sm border-2 border-white text-[10px]">
-            C
-          </span>
-          Calendar
-        </NavLink>
       </nav>
 
       <nav className="mt-auto flex flex-col gap-2 border-t border-white/20 pt-4">
