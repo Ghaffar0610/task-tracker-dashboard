@@ -1,3 +1,5 @@
+/* eslint-disable react-refresh/only-export-components */
+/* eslint-disable react-hooks/set-state-in-effect */
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 const AuthContext = createContext(null);
@@ -5,12 +7,32 @@ const AuthContext = createContext(null);
 const TOKEN_KEY = "tt-token";
 const TOKEN_SESSION_KEY = "tt-token-session";
 const USER_KEY = "tt-user";
+const USER_SESSION_KEY = "tt-user-session";
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [token, setToken] = useState("");
-  const [user, setUser] = useState(null);
-  const [isReady, setIsReady] = useState(false);
+  const [token, setToken] = useState(() => {
+    return (
+      localStorage.getItem(TOKEN_KEY) ||
+      sessionStorage.getItem(TOKEN_SESSION_KEY) ||
+      ""
+    );
+  });
+  const [user, setUser] = useState(() => {
+    const storedUser =
+      localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_SESSION_KEY);
+    if (!storedUser) return null;
+    try {
+      return JSON.parse(storedUser);
+    } catch {
+      return null;
+    }
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    const storedToken =
+      localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_SESSION_KEY);
+    return Boolean(storedToken);
+  });
+  const [isReady] = useState(true);
   const logoutTimerRef = useRef(null);
 
   const clearLogoutTimer = () => {
@@ -27,12 +49,23 @@ export const AuthProvider = ({ children }) => {
       const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
       const json = atob(normalized);
       return JSON.parse(json);
-    } catch (error) {
+    } catch {
       return null;
     }
   };
 
-  const scheduleAutoLogout = (jwtToken) => {
+  function logout() {
+    clearLogoutTimer();
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    sessionStorage.removeItem(TOKEN_SESSION_KEY);
+    sessionStorage.removeItem(USER_SESSION_KEY);
+    setToken("");
+    setUser(null);
+    setIsAuthenticated(false);
+  }
+
+  function scheduleAutoLogout(jwtToken) {
     clearLogoutTimer();
     if (!jwtToken) return;
     const payload = parseJwt(jwtToken);
@@ -46,20 +79,15 @@ export const AuthProvider = ({ children }) => {
     logoutTimerRef.current = setTimeout(() => {
       logout();
     }, delay);
-  };
+  }
 
   useEffect(() => {
-    const storedToken =
-      localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_SESSION_KEY);
-    const storedUser = localStorage.getItem(USER_KEY);
-    setToken(storedToken || "");
-    setUser(storedUser ? JSON.parse(storedUser) : null);
-    setIsAuthenticated(Boolean(storedToken));
-    setIsReady(true);
-    if (storedToken) {
-      scheduleAutoLogout(storedToken);
+    if (token) {
+      scheduleAutoLogout(token);
+    } else {
+      clearLogoutTimer();
     }
-  }, []);
+  }, [token]);
 
   const login = ({ token: authToken, user: authUser, remember }) => {
     scheduleAutoLogout(authToken);
@@ -67,8 +95,10 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem(TOKEN_KEY, authToken);
       localStorage.setItem(USER_KEY, JSON.stringify(authUser));
       sessionStorage.removeItem(TOKEN_SESSION_KEY);
+      sessionStorage.removeItem(USER_SESSION_KEY);
     } else {
       sessionStorage.setItem(TOKEN_SESSION_KEY, authToken);
+      sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(authUser));
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
     }
@@ -77,20 +107,12 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(true);
   };
 
-  const logout = () => {
-    clearLogoutTimer();
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    sessionStorage.removeItem(TOKEN_SESSION_KEY);
-    setToken("");
-    setUser(null);
-    setIsAuthenticated(false);
-  };
-
   const updateUser = (nextUser) => {
     setUser(nextUser);
     if (localStorage.getItem(USER_KEY)) {
       localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
+    } else if (sessionStorage.getItem(USER_SESSION_KEY)) {
+      sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(nextUser));
     }
   };
 

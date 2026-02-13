@@ -30,7 +30,7 @@ const Settings = () => {
   });
 
   const [appearanceForm, setAppearanceForm] = useState({
-    theme: user?.uiTheme || "system",
+    theme: user?.uiTheme || "light",
   });
 
   const [workspaceForm, setWorkspaceForm] = useState({
@@ -145,7 +145,7 @@ const Settings = () => {
           body: { uiTheme: appearanceForm.theme },
         });
         updateUser(updated);
-        applyTheme(updated.uiTheme || "system");
+        applyTheme(updated.uiTheme || "light");
       },
     });
   };

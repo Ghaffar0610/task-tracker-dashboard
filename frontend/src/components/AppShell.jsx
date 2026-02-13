@@ -8,7 +8,8 @@ const AppShell = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    applyTheme(user?.uiTheme || "system");
+    // Default to light so refresh doesn't unexpectedly switch to OS dark mode.
+    applyTheme(user?.uiTheme || "light");
   }, [user?.uiTheme]);
 
   return (
@@ -19,4 +20,3 @@ const AppShell = () => {
 };
 
 export default AppShell;
-
