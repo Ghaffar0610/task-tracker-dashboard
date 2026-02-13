@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
-/* eslint-disable react-hooks/set-state-in-effect */
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { API_BASE_URL } from "../config/api";
 
 const AuthContext = createContext(null);
 
@@ -10,6 +10,7 @@ const USER_KEY = "tt-user";
 const USER_SESSION_KEY = "tt-user-session";
 
 export const AuthProvider = ({ children }) => {
+  const [isReady, setIsReady] = useState(false);
   const [token, setToken] = useState(() => {
     return (
       localStorage.getItem(TOKEN_KEY) ||
@@ -32,8 +33,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_SESSION_KEY);
     return Boolean(storedToken);
   });
-  const [isReady] = useState(true);
   const logoutTimerRef = useRef(null);
+  const hasHydratedRef = useRef(false);
 
   const clearLogoutTimer = () => {
     if (logoutTimerRef.current) {
@@ -82,6 +83,59 @@ export const AuthProvider = ({ children }) => {
   }
 
   useEffect(() => {
+    // Hydrate from the API so profile/settings persist across devices and refreshes.
+    // Local/session storage is only a cache; the DB is the source of truth.
+    if (hasHydratedRef.current) return;
+    hasHydratedRef.current = true;
+
+    const storedToken =
+      localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_SESSION_KEY);
+
+    if (!storedToken) {
+      setIsReady(true);
+      return;
+    }
+
+    setToken(storedToken);
+    setIsAuthenticated(true);
+    scheduleAutoLogout(storedToken);
+
+    const controller = new AbortController();
+    const hydrateUser = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+          headers: { Authorization: `Bearer ${storedToken}` },
+          signal: controller.signal,
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            logout();
+          }
+          return;
+        }
+
+        setUser(data);
+
+        // Persist to the same storage as the token.
+        if (localStorage.getItem(TOKEN_KEY)) {
+          localStorage.setItem(USER_KEY, JSON.stringify(data));
+        } else {
+          sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(data));
+        }
+      } catch {
+        // If offline/failed, keep cached user if any.
+      } finally {
+        setIsReady(true);
+      }
+    };
+
+    hydrateUser();
+
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
     if (token) {
       scheduleAutoLogout(token);
     } else {
@@ -105,6 +159,7 @@ export const AuthProvider = ({ children }) => {
     setToken(authToken);
     setUser(authUser);
     setIsAuthenticated(true);
+    setIsReady(true);
   };
 
   const updateUser = (nextUser) => {
