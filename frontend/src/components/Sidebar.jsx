@@ -30,7 +30,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
       <aside
         className={[
-          "fixed inset-y-0 left-0 z-50 flex w-72 max-w-[82vw] flex-col bg-[#1e5bb9] p-5 text-white shadow-xl transition-transform duration-200 md:static md:z-auto md:w-64 md:max-w-none md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex h-[100dvh] w-72 max-w-[82vw] flex-col overflow-y-auto bg-[#1e5bb9] p-5 text-white shadow-xl transition-transform duration-200 md:static md:z-auto md:w-64 md:max-w-none md:translate-x-0",
           isOpen ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
       >
