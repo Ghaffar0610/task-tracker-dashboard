@@ -3,7 +3,6 @@
   CheckIcon,
 } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
-import Layout from "../components/Layout";
 import PageHeader from "../components/PageHeader";
 import StatCard from "../components/StatCard";
 import UserProfileButton from "../components/UserProfileButton";
@@ -15,7 +14,7 @@ import { useFocus } from "../context/FocusContext";
 import { API_BASE_URL } from "../config/api";
 
 const Dashboard = () => {
-  const { stats, isLoading } = useTasks();
+  const { stats } = useTasks();
   const { token } = useAuth();
   const {
     isActive,
@@ -82,7 +81,7 @@ const Dashboard = () => {
           return;
         }
         setActivities(data);
-      } catch (err) {
+      } catch {
         setActivityError("Unable to reach the server.");
       } finally {
         setActivityLoading(false);
@@ -130,7 +129,7 @@ const Dashboard = () => {
       setActivities((prev) => prev.filter((item) => item._id !== deleteTarget));
       setDeleteTarget(null);
       setDeletePassword("");
-    } catch (err) {
+    } catch {
       setDeleteError("Unable to reach the server.");
     } finally {
       setDeleteLoading(false);
@@ -138,7 +137,7 @@ const Dashboard = () => {
   };
 
   return (
-    <Layout>
+    <>
       <PageHeader
         title="Welcome Back!"
         right={
@@ -401,7 +400,7 @@ const Dashboard = () => {
           </div>
         </div>
       ) : null}
-    </Layout>
+    </>
   );
 };
 

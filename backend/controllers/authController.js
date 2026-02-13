@@ -23,6 +23,9 @@ const toUserPayload = (user) => ({
   name: user.name,
   email: user.email,
   avatarUrl: user.avatarUrl || "",
+  uiTheme: user.uiTheme || "system",
+  workspaceName: user.workspaceName || "",
+  workspaceDefaultRole: user.workspaceDefaultRole || "member",
   emailNotificationsEnabled: Boolean(user.emailNotificationsEnabled),
   emailNotificationTypes:
     user.emailNotificationTypes && user.emailNotificationTypes.length > 0

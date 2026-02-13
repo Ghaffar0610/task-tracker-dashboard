@@ -1,145 +1,120 @@
-import { useEffect, useMemo, useState } from "react";
-import Layout from "../components/Layout";
+import { useMemo, useState } from "react";
 import PageHeader from "../components/PageHeader";
 import NotificationBell from "../components/NotificationBell";
 import UserProfileButton from "../components/UserProfileButton";
 import { useAuth } from "../context/AuthContext";
-
-const STORAGE_KEY = "tt-settings";
+import { API_BASE_URL } from "../config/api";
+import { applyTheme } from "../utils/theme";
 
 const sections = [
-  { id: "profile", label: "Profile" },
   { id: "security", label: "Account & Security" },
   { id: "appearance", label: "Appearance" },
   { id: "workspace", label: "Workspace / Team" },
-  { id: "calendar", label: "Calendar" },
   { id: "about", label: "About & Support" },
 ];
 
 const inputClass =
   "w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200";
 
-const getStoredSettings = () => {
-  try {
-    const value = localStorage.getItem(STORAGE_KEY);
-    return value ? JSON.parse(value) : {};
-  } catch {
-    return {};
-  }
-};
-
-const saveStoredSettings = (nextSettings) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(nextSettings));
-};
-
-const applyTheme = (theme) => {
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const shouldUseDark = theme === "dark" || (theme === "system" && prefersDark);
-  document.body.classList.toggle("theme-dark", shouldUseDark);
-};
-
 const Settings = () => {
-  const { user, updateUser } = useAuth();
-  const stored = getStoredSettings();
-
-  const [activeSection, setActiveSection] = useState("profile");
+  const { token, user, updateUser } = useAuth();
+  const [activeSection, setActiveSection] = useState("security");
   const [savingSection, setSavingSection] = useState("");
   const [feedback, setFeedback] = useState({ type: "", message: "" });
-
-  const [profileForm, setProfileForm] = useState({
-    name: user?.name || stored.profile?.name || "",
-    avatarUrl: user?.avatarUrl || stored.profile?.avatarUrl || "",
-    timezone: stored.profile?.timezone || "UTC",
-    language: stored.profile?.language || "English",
-  });
 
   const [securityForm, setSecurityForm] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
-    twoFactorEnabled: Boolean(stored.security?.twoFactorEnabled),
   });
 
   const [appearanceForm, setAppearanceForm] = useState({
-    theme: stored.appearance?.theme || "system",
+    theme: user?.uiTheme || "system",
   });
 
   const [workspaceForm, setWorkspaceForm] = useState({
-    teamName: stored.workspace?.teamName || "",
-    inviteEmail: "",
-    defaultRole: stored.workspace?.defaultRole || "member",
+    workspaceName: user?.workspaceName || "",
+    defaultRole: user?.workspaceDefaultRole || "member",
   });
-
-  const [calendarForm, setCalendarForm] = useState({
-    connected: Boolean(stored.calendar?.connected),
-    syncTasks: Boolean(stored.calendar?.syncTasks),
-  });
-
-  useEffect(() => {
-    applyTheme(appearanceForm.theme);
-  }, [appearanceForm.theme]);
 
   const activeLabel = useMemo(
     () => sections.find((section) => section.id === activeSection)?.label || "",
     [activeSection]
   );
 
-  const runSave = async ({ section, payload, onSuccess }) => {
+  const authedFetchJson = async (url, { method, body }) => {
+    const response = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.message || "Request failed.");
+    }
+    return data;
+  };
+
+  const runSave = async ({ section, action }) => {
     setSavingSection(section);
     setFeedback({ type: "", message: "" });
     try {
-      const nextSettings = {
-        ...getStoredSettings(),
-        [section]: payload,
-      };
-      saveStoredSettings(nextSettings);
-      onSuccess?.();
+      await action();
       setFeedback({ type: "success", message: "Saved." });
-    } catch {
-      setFeedback({ type: "error", message: "Unable to save." });
+    } catch (error) {
+      setFeedback({
+        type: "error",
+        message: error.message || "Unable to save.",
+      });
     } finally {
       setSavingSection("");
     }
   };
 
-  const handleProfileSave = (event) => {
+  const handlePasswordSave = (event) => {
     event.preventDefault();
-    runSave({
-      section: "profile",
-      payload: profileForm,
-      onSuccess: () => updateUser({ ...user, ...profileForm }),
-    });
-  };
-
-  const handleSecuritySave = (event) => {
-    event.preventDefault();
-    if (!securityForm.newPassword || !securityForm.confirmPassword) {
-      setFeedback({ type: "error", message: "Enter new password fields." });
+    if (!securityForm.currentPassword || !securityForm.newPassword) {
+      setFeedback({
+        type: "error",
+        message: "Current password and new password are required.",
+      });
       return;
     }
     if (securityForm.newPassword !== securityForm.confirmPassword) {
       setFeedback({ type: "error", message: "New passwords do not match." });
       return;
     }
+
     runSave({
       section: "security",
-      payload: { twoFactorEnabled: securityForm.twoFactorEnabled },
-      onSuccess: () =>
-        setSecurityForm((prev) => ({
-          ...prev,
-          currentPassword: "",
-          newPassword: "",
-          confirmPassword: "",
-        })),
+      action: async () => {
+        await authedFetchJson(`${API_BASE_URL}/api/users/me/password`, {
+          method: "PUT",
+          body: {
+            currentPassword: securityForm.currentPassword,
+            newPassword: securityForm.newPassword,
+          },
+        });
+        setSecurityForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      },
     });
   };
 
-  const handleAppearanceSave = (event) => {
+  const handleThemeSave = (event) => {
     event.preventDefault();
     runSave({
       section: "appearance",
-      payload: appearanceForm,
-      onSuccess: () => applyTheme(appearanceForm.theme),
+      action: async () => {
+        const updated = await authedFetchJson(`${API_BASE_URL}/api/users/me`, {
+          method: "PATCH",
+          body: { uiTheme: appearanceForm.theme },
+        });
+        updateUser(updated);
+        applyTheme(updated.uiTheme || "system");
+      },
     });
   };
 
@@ -147,22 +122,21 @@ const Settings = () => {
     event.preventDefault();
     runSave({
       section: "workspace",
-      payload: workspaceForm,
-      onSuccess: () =>
-        setWorkspaceForm((prev) => ({
-          ...prev,
-          inviteEmail: "",
-        })),
+      action: async () => {
+        const updated = await authedFetchJson(`${API_BASE_URL}/api/users/me`, {
+          method: "PATCH",
+          body: {
+            workspaceName: workspaceForm.workspaceName,
+            workspaceDefaultRole: workspaceForm.defaultRole,
+          },
+        });
+        updateUser(updated);
+      },
     });
   };
 
-  const handleCalendarSave = (event) => {
-    event.preventDefault();
-    runSave({ section: "calendar", payload: calendarForm });
-  };
-
   return (
-    <Layout>
+    <>
       <PageHeader
         title="Settings"
         right={
@@ -215,91 +189,8 @@ const Settings = () => {
             </div>
           ) : null}
 
-          {activeSection === "profile" ? (
-            <form className="space-y-4" onSubmit={handleProfileSave}>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <label className="space-y-2">
-                  <span className="text-sm font-semibold text-gray-600">Name</span>
-                  <input
-                    className={inputClass}
-                    value={profileForm.name}
-                    onChange={(event) =>
-                      setProfileForm((prev) => ({
-                        ...prev,
-                        name: event.target.value,
-                      }))
-                    }
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-sm font-semibold text-gray-600">
-                    Avatar URL
-                  </span>
-                  <input
-                    className={inputClass}
-                    value={profileForm.avatarUrl}
-                    onChange={(event) =>
-                      setProfileForm((prev) => ({
-                        ...prev,
-                        avatarUrl: event.target.value,
-                      }))
-                    }
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-sm font-semibold text-gray-600">
-                    Timezone
-                  </span>
-                  <select
-                    className={inputClass}
-                    value={profileForm.timezone}
-                    onChange={(event) =>
-                      setProfileForm((prev) => ({
-                        ...prev,
-                        timezone: event.target.value,
-                      }))
-                    }
-                  >
-                    <option value="UTC">UTC</option>
-                    <option value="America/New_York">America/New_York</option>
-                    <option value="America/Chicago">America/Chicago</option>
-                    <option value="America/Denver">America/Denver</option>
-                    <option value="America/Los_Angeles">America/Los_Angeles</option>
-                  </select>
-                </label>
-                <label className="space-y-2">
-                  <span className="text-sm font-semibold text-gray-600">
-                    Language
-                  </span>
-                  <select
-                    className={inputClass}
-                    value={profileForm.language}
-                    onChange={(event) =>
-                      setProfileForm((prev) => ({
-                        ...prev,
-                        language: event.target.value,
-                      }))
-                    }
-                  >
-                    <option value="English">English</option>
-                    <option value="Spanish">Spanish</option>
-                    <option value="French">French</option>
-                    <option value="German">German</option>
-                  </select>
-                </label>
-              </div>
-              <button
-                type="submit"
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
-                disabled={savingSection === "profile"}
-              >
-                {savingSection === "profile" ? "Saving..." : "Save Profile"}
-              </button>
-            </form>
-          ) : null}
-
           {activeSection === "security" ? (
-            <form className="space-y-4" onSubmit={handleSecuritySave}>
+            <form className="space-y-4" onSubmit={handlePasswordSave}>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <label className="space-y-2 md:col-span-2">
                   <span className="text-sm font-semibold text-gray-600">
@@ -350,41 +241,25 @@ const Settings = () => {
                   />
                 </label>
               </div>
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={securityForm.twoFactorEnabled}
-                  onChange={(event) =>
-                    setSecurityForm((prev) => ({
-                      ...prev,
-                      twoFactorEnabled: event.target.checked,
-                    }))
-                  }
-                />
-                <span className="text-sm text-gray-700">Enable 2FA</span>
-              </label>
               <button
                 type="submit"
                 className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
                 disabled={savingSection === "security"}
               >
-                {savingSection === "security" ? "Saving..." : "Save Security"}
+                {savingSection === "security" ? "Saving..." : "Change Password"}
               </button>
             </form>
           ) : null}
 
           {activeSection === "appearance" ? (
-            <form className="space-y-4" onSubmit={handleAppearanceSave}>
+            <form className="space-y-4" onSubmit={handleThemeSave}>
               <label className="space-y-2 block max-w-sm">
                 <span className="text-sm font-semibold text-gray-600">Theme</span>
                 <select
                   className={inputClass}
                   value={appearanceForm.theme}
                   onChange={(event) =>
-                    setAppearanceForm((prev) => ({
-                      ...prev,
-                      theme: event.target.value,
-                    }))
+                    setAppearanceForm({ theme: event.target.value })
                   }
                 >
                   <option value="light">Light</option>
@@ -411,28 +286,11 @@ const Settings = () => {
                   </span>
                   <input
                     className={inputClass}
-                    value={workspaceForm.teamName}
+                    value={workspaceForm.workspaceName}
                     onChange={(event) =>
                       setWorkspaceForm((prev) => ({
                         ...prev,
-                        teamName: event.target.value,
-                      }))
-                    }
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-sm font-semibold text-gray-600">
-                    Invite by email
-                  </span>
-                  <input
-                    type="email"
-                    className={inputClass}
-                    placeholder="teammate@example.com"
-                    value={workspaceForm.inviteEmail}
-                    onChange={(event) =>
-                      setWorkspaceForm((prev) => ({
-                        ...prev,
-                        inviteEmail: event.target.value,
+                        workspaceName: event.target.value,
                       }))
                     }
                   />
@@ -467,56 +325,6 @@ const Settings = () => {
             </form>
           ) : null}
 
-          {activeSection === "calendar" ? (
-            <form className="space-y-4" onSubmit={handleCalendarSave}>
-              <div className="rounded-md border border-gray-100 bg-gray-50 p-4">
-                <p className="text-sm font-semibold text-gray-700">
-                  Google Calendar
-                </p>
-                <p className="mt-1 text-sm text-gray-500">
-                  Single calendar integration for task sync.
-                </p>
-              </div>
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={calendarForm.connected}
-                  onChange={(event) =>
-                    setCalendarForm((prev) => ({
-                      ...prev,
-                      connected: event.target.checked,
-                    }))
-                  }
-                />
-                <span className="text-sm text-gray-700">Connected</span>
-              </label>
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={calendarForm.syncTasks}
-                  onChange={(event) =>
-                    setCalendarForm((prev) => ({
-                      ...prev,
-                      syncTasks: event.target.checked,
-                    }))
-                  }
-                />
-                <span className="text-sm text-gray-700">
-                  Sync task due dates
-                </span>
-              </label>
-              <button
-                type="submit"
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
-                disabled={savingSection === "calendar"}
-              >
-                {savingSection === "calendar"
-                  ? "Saving..."
-                  : "Save Calendar Settings"}
-              </button>
-            </form>
-          ) : null}
-
           {activeSection === "about" ? (
             <div className="space-y-4">
               <div className="rounded-md border border-gray-100 bg-gray-50 p-4">
@@ -525,8 +333,7 @@ const Settings = () => {
               </div>
               <div className="rounded-md border border-gray-100 p-4">
                 <p className="text-sm text-gray-600">
-                  For support, use:
-                  {" "}
+                  Support:{" "}
                   <a
                     href="mailto:support@tasktracker.app"
                     className="font-semibold text-blue-600 hover:underline"
@@ -539,7 +346,7 @@ const Settings = () => {
           ) : null}
         </section>
       </div>
-    </Layout>
+    </>
   );
 };
 

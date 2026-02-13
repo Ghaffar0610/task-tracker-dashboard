@@ -25,6 +25,8 @@ const upload = multer({
 router.use(authMiddleware);
 
 router.get("/me", getMe);
+// JSON updates (theme/workspace/etc) without multipart parsing.
+router.patch("/me", updateMe);
 router.put("/me", upload.single("avatar"), updateMe);
 router.put("/me/password", changePassword);
 router.get("/me/notification-preferences", getNotificationPreferences);

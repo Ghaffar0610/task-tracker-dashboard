@@ -24,6 +24,21 @@ const userSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    uiTheme: {
+      type: String,
+      enum: ["light", "dark", "system"],
+      default: "system",
+    },
+    workspaceName: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    workspaceDefaultRole: {
+      type: String,
+      enum: ["member", "admin", "viewer"],
+      default: "member",
+    },
     emailNotificationsEnabled: {
       type: Boolean,
       default: false,

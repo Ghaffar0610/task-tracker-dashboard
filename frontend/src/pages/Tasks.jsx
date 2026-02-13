@@ -1,7 +1,6 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
-import Layout from "../components/Layout";
 import PageHeader from "../components/PageHeader";
 import TaskCard from "../components/TaskCard";
 import TaskModal from "../components/TaskModal";
@@ -19,16 +18,11 @@ const Tasks = () => {
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("pending");
   const [error, setError] = useState("");
-  const [filter, setFilter] = useState("all");
   const [duplicateConfirm, setDuplicateConfirm] = useState(null);
 
-  useEffect(() => {
+  const filter = useMemo(() => {
     const next = searchParams.get("status");
-    if (next === "completed" || next === "pending") {
-      setFilter(next);
-    } else {
-      setFilter("all");
-    }
+    return next === "completed" || next === "pending" ? next : "all";
   }, [searchParams]);
 
   const visibleTasks = useMemo(() => {
@@ -106,7 +100,7 @@ const Tasks = () => {
   };
 
   return (
-    <Layout>
+    <>
       <PageHeader
         title="Your Tasks"
         right={
@@ -129,10 +123,8 @@ const Tasks = () => {
           value={filter}
           onChange={(event) => {
             const next = event.target.value;
-            setFilter(next);
             if (next === "all") {
-              searchParams.delete("status");
-              setSearchParams(searchParams);
+              setSearchParams({});
             } else {
               setSearchParams({ status: next });
             }
@@ -237,7 +229,7 @@ const Tasks = () => {
             document.body
           )
         : null}
-    </Layout>
+    </>
   );
 };
 

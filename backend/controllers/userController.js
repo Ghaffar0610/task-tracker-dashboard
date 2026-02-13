@@ -7,14 +7,29 @@ const notificationTypes = [
   "task_deleted",
 ];
 
+const toUserPayload = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  avatarUrl: user.avatarUrl || "",
+  uiTheme: user.uiTheme || "system",
+  workspaceName: user.workspaceName || "",
+  workspaceDefaultRole: user.workspaceDefaultRole || "member",
+  emailNotificationsEnabled: Boolean(user.emailNotificationsEnabled),
+  emailNotificationTypes:
+    user.emailNotificationTypes && user.emailNotificationTypes.length > 0
+      ? user.emailNotificationTypes
+      : notificationTypes,
+});
+
 const getMe = async (req, res) => {
   const user = await User.findById(req.user.id).select(
-    "name email avatarUrl emailNotificationsEnabled emailNotificationTypes"
+    "name email avatarUrl uiTheme workspaceName workspaceDefaultRole emailNotificationsEnabled emailNotificationTypes"
   );
   if (!user) {
     return res.status(404).json({ message: "User not found." });
   }
-  return res.status(200).json(user);
+  return res.status(200).json(toUserPayload(user));
 };
 
 const updateMe = async (req, res) => {
@@ -25,6 +40,15 @@ const updateMe = async (req, res) => {
       updates.name = nextName;
     }
   }
+  if (req.body.uiTheme !== undefined) {
+    updates.uiTheme = req.body.uiTheme;
+  }
+  if (req.body.workspaceName !== undefined) {
+    updates.workspaceName = String(req.body.workspaceName || "").trim();
+  }
+  if (req.body.workspaceDefaultRole !== undefined) {
+    updates.workspaceDefaultRole = req.body.workspaceDefaultRole;
+  }
   if (req.file) {
     const encoded = req.file.buffer.toString("base64");
     updates.avatarUrl = `data:${req.file.mimetype};base64,${encoded}`;
@@ -33,13 +57,15 @@ const updateMe = async (req, res) => {
   const user = await User.findByIdAndUpdate(req.user.id, updates, {
     new: true,
     runValidators: true,
-  }).select("name email avatarUrl emailNotificationsEnabled emailNotificationTypes");
+  }).select(
+    "name email avatarUrl uiTheme workspaceName workspaceDefaultRole emailNotificationsEnabled emailNotificationTypes"
+  );
 
   if (!user) {
     return res.status(404).json({ message: "User not found." });
   }
 
-  return res.status(200).json(user);
+  return res.status(200).json(toUserPayload(user));
 };
 
 const changePassword = async (req, res) => {
