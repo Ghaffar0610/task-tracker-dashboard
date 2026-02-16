@@ -39,6 +39,10 @@ const Layout = ({ children }) => {
         <main className="min-w-0 flex-1 space-y-6 p-4 sm:p-6 md:space-y-8 md:p-8">
           {children}
         </main>
+
+        <footer className="border-t border-gray-200 px-4 py-4 text-center text-xs text-gray-500 sm:px-6 md:px-8 dark:border-slate-800 dark:text-slate-400">
+          Copyright {new Date().getFullYear()} Task Tracker Dashboard. All rights reserved.2026
+        </footer>
       </div>
     </div>
   );
