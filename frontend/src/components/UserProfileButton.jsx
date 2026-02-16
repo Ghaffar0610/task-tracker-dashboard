@@ -19,6 +19,7 @@ const UserProfileButton = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const containerRef = useRef(null);
+  const closeMenuTimerRef = useRef(null);
 
   const avatarSrc = getAvatarSrc(user?.avatarUrl || "");
   const canViewPhoto = Boolean(avatarSrc);
@@ -39,13 +40,37 @@ const UserProfileButton = () => {
     };
   }, [isMenuOpen]);
 
+  useEffect(() => {
+    return () => {
+      if (closeMenuTimerRef.current) {
+        clearTimeout(closeMenuTimerRef.current);
+      }
+    };
+  }, []);
+
+  const openMenu = () => {
+    if (closeMenuTimerRef.current) {
+      clearTimeout(closeMenuTimerRef.current);
+    }
+    setIsMenuOpen(true);
+  };
+
+  const closeMenuWithDelay = () => {
+    if (closeMenuTimerRef.current) {
+      clearTimeout(closeMenuTimerRef.current);
+    }
+    closeMenuTimerRef.current = setTimeout(() => {
+      setIsMenuOpen(false);
+    }, 120);
+  };
+
   return (
     <>
       <div
         ref={containerRef}
         className="relative"
-        onMouseEnter={() => setIsMenuOpen(true)}
-        onMouseLeave={() => setIsMenuOpen(false)}
+        onMouseEnter={openMenu}
+        onMouseLeave={closeMenuWithDelay}
       >
         <button
           type="button"
@@ -60,6 +85,8 @@ const UserProfileButton = () => {
           <div
             role="menu"
             className="absolute right-0 top-full z-50 mt-2 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950"
+            onMouseEnter={openMenu}
+            onMouseLeave={closeMenuWithDelay}
             onClick={(event) => event.stopPropagation()}
           >
             <button
