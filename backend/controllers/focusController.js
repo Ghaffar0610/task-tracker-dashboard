@@ -1,12 +1,23 @@
 const FocusSession = require("../models/FocusSession");
+const mongoose = require("mongoose");
+
+const MAX_TASKS_COMPLETED = 1000;
 
 const startFocus = async (req, res) => {
   const { durationMinutes } = req.body;
   const minutes = Number(durationMinutes);
-  if (!minutes || minutes < 5 || minutes > 180) {
+  if (!Number.isInteger(minutes) || minutes < 5 || minutes > 180) {
     return res
       .status(400)
       .json({ message: "Duration must be between 5 and 180 minutes." });
+  }
+
+  const activeSession = await FocusSession.findOne({
+    userId: req.user.id,
+    endedAt: null,
+  }).select("_id");
+  if (activeSession) {
+    return res.status(409).json({ message: "A focus session is already active." });
   }
 
   const session = await FocusSession.create({
@@ -24,6 +35,21 @@ const stopFocus = async (req, res) => {
   if (!sessionId) {
     return res.status(400).json({ message: "Session id is required." });
   }
+  if (!mongoose.Types.ObjectId.isValid(sessionId)) {
+    return res.status(400).json({ message: "Invalid session id." });
+  }
+
+  const tasksCount = Number(tasksCompleted);
+  if (
+    tasksCompleted !== undefined &&
+    (!Number.isInteger(tasksCount) ||
+      tasksCount < 0 ||
+      tasksCount > MAX_TASKS_COMPLETED)
+  ) {
+    return res.status(400).json({
+      message: `tasksCompleted must be an integer between 0 and ${MAX_TASKS_COMPLETED}.`,
+    });
+  }
 
   const session = await FocusSession.findOne({
     _id: sessionId,
@@ -32,9 +58,12 @@ const stopFocus = async (req, res) => {
   if (!session) {
     return res.status(404).json({ message: "Session not found." });
   }
+  if (session.endedAt) {
+    return res.status(409).json({ message: "Session is already stopped." });
+  }
 
   session.endedAt = new Date();
-  session.tasksCompleted = Math.max(0, Number(tasksCompleted) || 0);
+  session.tasksCompleted = Number.isInteger(tasksCount) ? tasksCount : 0;
   await session.save();
 
   return res.status(200).json(session);

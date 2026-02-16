@@ -17,8 +17,8 @@ const defaultNotificationTypes = [
 
 const normalizeEmail = (value = "") => value.trim().toLowerCase();
 
-const createToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, {
+const createToken = (userId, role) => {
+  return jwt.sign({ userId, role: role || "member" }, process.env.JWT_SECRET, {
     expiresIn: "7d",
   });
 };
@@ -27,6 +27,8 @@ const toUserPayload = (user) => ({
   id: user._id,
   name: user.name,
   email: user.email,
+  role: user.role || "member",
+  mustChangePassword: Boolean(user.mustChangePassword),
   avatarUrl: user.avatarUrl || "",
   uiTheme: user.uiTheme || "system",
   workspaceName: user.workspaceName || "",
@@ -75,10 +77,16 @@ const register = async (req, res) => {
 
   const hashed = await bcrypt.hash(password, 10);
   const userReferralCode = await ensureUniqueReferralCode();
+  const adminEmail = normalizeEmail(process.env.ADMIN_EMAIL || "");
+  const role =
+    adminEmail && normalizedEmail === adminEmail ? "admin" : "member";
   const user = await User.create({
     name,
     email: normalizedEmail,
     password: hashed,
+    role,
+    mustChangePassword: false,
+    passwordUpdatedAt: new Date(),
     referralCode: userReferralCode,
     referredBy: referrer ? referrer._id : null,
   });
@@ -89,7 +97,7 @@ const register = async (req, res) => {
   }
 
   const refreshed = await User.findById(user._id);
-  const token = createToken(user._id);
+  const token = createToken(user._id, role);
   return res.status(201).json({
     token,
     user: toUserPayload(refreshed || user),
@@ -120,6 +128,12 @@ const login = async (req, res) => {
     return res.status(401).json({ message: "Invalid credentials." });
   }
 
+  const adminEmail = normalizeEmail(process.env.ADMIN_EMAIL || "");
+  if (adminEmail && normalizedEmail === adminEmail && user.role !== "admin") {
+    user.role = "admin";
+    await user.save();
+  }
+
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
     return res.status(401).json({ message: "Invalid credentials." });
@@ -131,7 +145,7 @@ const login = async (req, res) => {
     user.referralCode = code || "";
   }
 
-  const token = createToken(user._id);
+  const token = createToken(user._id, user.role);
   return res.status(200).json({
     token,
     user: toUserPayload(user),
@@ -172,9 +186,52 @@ const resetPasswordWithRecoveryCode = async (req, res) => {
   }
 
   user.password = await bcrypt.hash(newPassword, 10);
+  user.mustChangePassword = false;
+  user.passwordUpdatedAt = new Date();
   await user.save();
 
   return res.status(200).json({ message: "Password reset successful." });
 };
 
-module.exports = { register, login, resetPasswordWithRecoveryCode };
+const changeTempPassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({
+      message: "Current password and new password are required.",
+    });
+  }
+  if (newPassword.length < 6) {
+    return res
+      .status(400)
+      .json({ message: "Password must be at least 6 characters." });
+  }
+
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    return res.status(404).json({ message: "User not found." });
+  }
+  if (!user.mustChangePassword) {
+    return res.status(400).json({ message: "Temporary password reset is not required." });
+  }
+
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+  if (!isMatch) {
+    return res.status(401).json({ message: "Invalid current password." });
+  }
+
+  user.password = await bcrypt.hash(newPassword, 10);
+  user.mustChangePassword = false;
+  user.passwordUpdatedAt = new Date();
+  user.passwordResetByAdmin = null;
+  user.passwordResetAt = null;
+  await user.save();
+
+  return res.status(200).json({ message: "Password updated." });
+};
+
+module.exports = {
+  register,
+  login,
+  resetPasswordWithRecoveryCode,
+  changeTempPassword,
+};

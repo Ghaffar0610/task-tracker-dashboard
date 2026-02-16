@@ -1,6 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const authMiddleware = require("../middleware/auth");
+const adminOnly = require("../middleware/adminOnly");
 const {
   getMe,
   updateMe,
@@ -10,6 +11,7 @@ const {
   getRecoveryCodeStatus,
   regenerateRecoveryCodes,
   getReferrals,
+  adminResetUserPassword,
 } = require("../controllers/userController");
 
 const router = express.Router();
@@ -35,5 +37,6 @@ router.get("/me/notification-preferences", getNotificationPreferences);
 router.put("/me/notification-preferences", updateNotificationPreferences);
 router.get("/me/recovery-codes/status", getRecoveryCodeStatus);
 router.post("/me/recovery-codes/regenerate", regenerateRecoveryCodes);
+router.post("/admin/:id/reset-password", adminOnly, adminResetUserPassword);
 
 module.exports = router;

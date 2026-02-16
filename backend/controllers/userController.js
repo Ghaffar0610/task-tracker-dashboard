@@ -1,4 +1,7 @@
 const User = require("../models/User");
+const mongoose = require("mongoose");
+const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
 const { generateRecoveryCodes } = require("../services/recoveryCodeService");
 const { ensureUserHasReferralCode } = require("../services/referralService");
 const notificationTypes = [
@@ -12,6 +15,8 @@ const toUserPayload = (user) => ({
   id: user._id,
   name: user.name,
   email: user.email,
+  role: user.role || "member",
+  mustChangePassword: Boolean(user.mustChangePassword),
   avatarUrl: user.avatarUrl || "",
   uiTheme: user.uiTheme || "system",
   workspaceName: user.workspaceName || "",
@@ -28,7 +33,7 @@ const toUserPayload = (user) => ({
 
 const getMe = async (req, res) => {
   const user = await User.findById(req.user.id).select(
-    "name email avatarUrl uiTheme workspaceName workspaceDefaultRole referralCode referralPoints referralsCount emailNotificationsEnabled emailNotificationTypes"
+    "name email role mustChangePassword avatarUrl uiTheme workspaceName workspaceDefaultRole referralCode referralPoints referralsCount emailNotificationsEnabled emailNotificationTypes"
   );
   if (!user) {
     return res.status(404).json({ message: "User not found." });
@@ -44,6 +49,9 @@ const getMe = async (req, res) => {
 const updateMe = async (req, res) => {
   const updates = {};
   if (req.body.name !== undefined) {
+    if (typeof req.body.name !== "string") {
+      return res.status(400).json({ message: "Name must be a string." });
+    }
     const nextName = req.body.name.trim();
     if (nextName) {
       updates.name = nextName;
@@ -67,7 +75,7 @@ const updateMe = async (req, res) => {
     new: true,
     runValidators: true,
   }).select(
-    "name email avatarUrl uiTheme workspaceName workspaceDefaultRole referralCode referralPoints referralsCount emailNotificationsEnabled emailNotificationTypes"
+    "name email role mustChangePassword avatarUrl uiTheme workspaceName workspaceDefaultRole referralCode referralPoints referralsCount emailNotificationsEnabled emailNotificationTypes"
   );
 
   if (!user) {
@@ -110,13 +118,16 @@ const changePassword = async (req, res) => {
     return res.status(404).json({ message: "User not found." });
   }
 
-  const bcrypt = require("bcryptjs");
   const isMatch = await bcrypt.compare(currentPassword, user.password);
   if (!isMatch) {
     return res.status(401).json({ message: "Invalid current password." });
   }
 
   user.password = await bcrypt.hash(newPassword, 10);
+  user.mustChangePassword = false;
+  user.passwordUpdatedAt = new Date();
+  user.passwordResetByAdmin = null;
+  user.passwordResetAt = null;
   await user.save();
 
   return res.status(200).json({ message: "Password updated." });
@@ -143,7 +154,12 @@ const updateNotificationPreferences = async (req, res) => {
 
   const updates = {};
   if (emailNotificationsEnabled !== undefined) {
-    updates.emailNotificationsEnabled = Boolean(emailNotificationsEnabled);
+    if (typeof emailNotificationsEnabled !== "boolean") {
+      return res.status(400).json({
+        message: "emailNotificationsEnabled must be a boolean.",
+      });
+    }
+    updates.emailNotificationsEnabled = emailNotificationsEnabled;
   }
 
   if (emailNotificationTypes !== undefined) {
@@ -216,6 +232,58 @@ const regenerateRecoveryCodes = async (req, res) => {
   });
 };
 
+const generateTemporaryPassword = (length = 12) => {
+  const chars =
+    "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*";
+  let password = "";
+  for (let i = 0; i < length; i += 1) {
+    const idx = crypto.randomInt(0, chars.length);
+    password += chars[idx];
+  }
+  return password;
+};
+
+const adminResetUserPassword = async (req, res) => {
+  const { id } = req.params;
+  const { temporaryPassword } = req.body || {};
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid user id." });
+  }
+
+  if (temporaryPassword !== undefined && typeof temporaryPassword !== "string") {
+    return res.status(400).json({ message: "temporaryPassword must be a string." });
+  }
+
+  const nextTemporaryPassword =
+    temporaryPassword && temporaryPassword.trim()
+      ? temporaryPassword.trim()
+      : generateTemporaryPassword();
+
+  if (nextTemporaryPassword.length < 8) {
+    return res.status(400).json({
+      message: "Temporary password must be at least 8 characters.",
+    });
+  }
+
+  const targetUser = await User.findById(id);
+  if (!targetUser) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  targetUser.password = await bcrypt.hash(nextTemporaryPassword, 10);
+  targetUser.mustChangePassword = true;
+  targetUser.passwordUpdatedAt = new Date();
+  targetUser.passwordResetByAdmin = req.user.id;
+  targetUser.passwordResetAt = new Date();
+  await targetUser.save();
+
+  return res.status(200).json({
+    message: "Temporary password set. User must change password on next login.",
+    temporaryPassword: nextTemporaryPassword,
+  });
+};
+
 module.exports = {
   getMe,
   updateMe,
@@ -225,4 +293,5 @@ module.exports = {
   getRecoveryCodeStatus,
   regenerateRecoveryCodes,
   getReferrals,
+  adminResetUserPassword,
 };

@@ -19,6 +19,28 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 6,
     },
+    role: {
+      type: String,
+      enum: ["member", "admin"],
+      default: "member",
+    },
+    mustChangePassword: {
+      type: Boolean,
+      default: false,
+    },
+    passwordUpdatedAt: {
+      type: Date,
+      default: null,
+    },
+    passwordResetByAdmin: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    passwordResetAt: {
+      type: Date,
+      default: null,
+    },
     avatarUrl: {
       type: String,
       default: "",
