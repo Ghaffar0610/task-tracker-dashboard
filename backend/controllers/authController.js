@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const LoginEvent = require("../models/LoginEvent");
 const { consumeRecoveryCode } = require("../services/recoveryCodeService");
 const {
   ensureUniqueReferralCode,
@@ -16,11 +17,44 @@ const defaultNotificationTypes = [
 ];
 
 const normalizeEmail = (value = "") => value.trim().toLowerCase();
+const LOCK_AFTER_FAILED_ATTEMPTS = 5;
+const LOCK_MINUTES = 15;
 
-const createToken = (userId, role) => {
-  return jwt.sign({ userId, role: role || "member" }, process.env.JWT_SECRET, {
+const getRequestIp = (req) => {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string" && forwarded.trim()) {
+    return forwarded.split(",")[0].trim();
+  }
+  return req.ip || "";
+};
+
+const getRequestUserAgent = (req) => {
+  return String(req.headers["user-agent"] || "").slice(0, 500);
+};
+
+const recordLoginEvent = async ({ user, email, success, reason = "", req }) => {
+  try {
+    await LoginEvent.create({
+      userId: user?._id || null,
+      email: normalizeEmail(email || user?.email || ""),
+      success: Boolean(success),
+      reason,
+      ip: getRequestIp(req),
+      userAgent: getRequestUserAgent(req),
+    });
+  } catch {
+    // Do not block auth flow on telemetry write failure.
+  }
+};
+
+const createToken = (userId, role, tokenVersion = 0) => {
+  return jwt.sign(
+    { userId, role: role || "member", tokenVersion: tokenVersion || 0 },
+    process.env.JWT_SECRET,
+    {
     expiresIn: "7d",
-  });
+    }
+  );
 };
 
 const toUserPayload = (user) => ({
@@ -28,6 +62,7 @@ const toUserPayload = (user) => ({
   name: user.name,
   email: user.email,
   role: user.role || "member",
+  isActive: user.isActive !== false,
   mustChangePassword: Boolean(user.mustChangePassword),
   avatarUrl: user.avatarUrl || "",
   uiTheme: user.uiTheme || "system",
@@ -97,7 +132,7 @@ const register = async (req, res) => {
   }
 
   const refreshed = await User.findById(user._id);
-  const token = createToken(user._id, role);
+  const token = createToken(user._id, role, user.tokenVersion);
   return res.status(201).json({
     token,
     user: toUserPayload(refreshed || user),
@@ -125,6 +160,13 @@ const login = async (req, res) => {
 
   const user = await User.findOne({ email: normalizedEmail });
   if (!user) {
+    await recordLoginEvent({
+      user: null,
+      email: normalizedEmail,
+      success: false,
+      reason: "user_not_found",
+      req,
+    });
     return res.status(401).json({ message: "Invalid credentials." });
   }
 
@@ -134,8 +176,45 @@ const login = async (req, res) => {
     await user.save();
   }
 
+  if (user.isActive === false) {
+    await recordLoginEvent({
+      user,
+      email: normalizedEmail,
+      success: false,
+      reason: "account_deactivated",
+      req,
+    });
+    return res.status(403).json({ message: "Account is deactivated." });
+  }
+
+  if (user.lockedUntil && new Date(user.lockedUntil).getTime() > Date.now()) {
+    await recordLoginEvent({
+      user,
+      email: normalizedEmail,
+      success: false,
+      reason: "account_locked",
+      req,
+    });
+    return res.status(423).json({ message: "Account is temporarily locked." });
+  }
+
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
+    const nextAttempts = (user.failedLoginAttempts || 0) + 1;
+    user.failedLoginAttempts = nextAttempts;
+    if (nextAttempts >= LOCK_AFTER_FAILED_ATTEMPTS) {
+      const lockedUntil = new Date(Date.now() + LOCK_MINUTES * 60 * 1000);
+      user.lockedUntil = lockedUntil;
+      user.failedLoginAttempts = 0;
+    }
+    await user.save();
+    await recordLoginEvent({
+      user,
+      email: normalizedEmail,
+      success: false,
+      reason: "invalid_password",
+      req,
+    });
     return res.status(401).json({ message: "Invalid credentials." });
   }
 
@@ -145,7 +224,22 @@ const login = async (req, res) => {
     user.referralCode = code || "";
   }
 
-  const token = createToken(user._id, user.role);
+  user.failedLoginAttempts = 0;
+  user.lockedUntil = null;
+  user.lastLoginAt = new Date();
+  user.lastLoginIp = getRequestIp(req);
+  user.lastLoginUserAgent = getRequestUserAgent(req);
+  await user.save();
+
+  await recordLoginEvent({
+    user,
+    email: normalizedEmail,
+    success: true,
+    reason: "",
+    req,
+  });
+
+  const token = createToken(user._id, user.role, user.tokenVersion);
   return res.status(200).json({
     token,
     user: toUserPayload(user),
@@ -188,6 +282,7 @@ const resetPasswordWithRecoveryCode = async (req, res) => {
   user.password = await bcrypt.hash(newPassword, 10);
   user.mustChangePassword = false;
   user.passwordUpdatedAt = new Date();
+  user.tokenVersion = (user.tokenVersion || 0) + 1;
   await user.save();
 
   return res.status(200).json({ message: "Password reset successful." });
@@ -224,6 +319,7 @@ const changeTempPassword = async (req, res) => {
   user.passwordUpdatedAt = new Date();
   user.passwordResetByAdmin = null;
   user.passwordResetAt = null;
+  user.tokenVersion = (user.tokenVersion || 0) + 1;
   await user.save();
 
   return res.status(200).json({ message: "Password updated." });

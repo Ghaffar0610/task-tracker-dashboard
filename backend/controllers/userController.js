@@ -16,6 +16,7 @@ const toUserPayload = (user) => ({
   name: user.name,
   email: user.email,
   role: user.role || "member",
+  isActive: user.isActive !== false,
   mustChangePassword: Boolean(user.mustChangePassword),
   avatarUrl: user.avatarUrl || "",
   uiTheme: user.uiTheme || "system",
@@ -33,7 +34,7 @@ const toUserPayload = (user) => ({
 
 const getMe = async (req, res) => {
   const user = await User.findById(req.user.id).select(
-    "name email role mustChangePassword avatarUrl uiTheme workspaceName workspaceDefaultRole referralCode referralPoints referralsCount emailNotificationsEnabled emailNotificationTypes"
+    "name email role isActive mustChangePassword avatarUrl uiTheme workspaceName workspaceDefaultRole referralCode referralPoints referralsCount emailNotificationsEnabled emailNotificationTypes"
   );
   if (!user) {
     return res.status(404).json({ message: "User not found." });
@@ -75,7 +76,7 @@ const updateMe = async (req, res) => {
     new: true,
     runValidators: true,
   }).select(
-    "name email role mustChangePassword avatarUrl uiTheme workspaceName workspaceDefaultRole referralCode referralPoints referralsCount emailNotificationsEnabled emailNotificationTypes"
+    "name email role isActive mustChangePassword avatarUrl uiTheme workspaceName workspaceDefaultRole referralCode referralPoints referralsCount emailNotificationsEnabled emailNotificationTypes"
   );
 
   if (!user) {
@@ -128,6 +129,7 @@ const changePassword = async (req, res) => {
   user.passwordUpdatedAt = new Date();
   user.passwordResetByAdmin = null;
   user.passwordResetAt = null;
+  user.tokenVersion = (user.tokenVersion || 0) + 1;
   await user.save();
 
   return res.status(200).json({ message: "Password updated." });
@@ -276,6 +278,7 @@ const adminResetUserPassword = async (req, res) => {
   targetUser.passwordUpdatedAt = new Date();
   targetUser.passwordResetByAdmin = req.user.id;
   targetUser.passwordResetAt = new Date();
+  targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
   await targetUser.save();
 
   return res.status(200).json({

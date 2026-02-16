@@ -24,6 +24,38 @@ const userSchema = new mongoose.Schema(
       enum: ["member", "admin"],
       default: "member",
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    lockedUntil: {
+      type: Date,
+      default: null,
+    },
+    lastLoginAt: {
+      type: Date,
+      default: null,
+    },
+    lastLoginIp: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    lastLoginUserAgent: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     mustChangePassword: {
       type: Boolean,
       default: false,

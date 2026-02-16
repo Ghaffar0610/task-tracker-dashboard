@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Tasks from "./pages/Tasks";
 import Settings from "./pages/Settings";
 import Calendar from "./pages/Calendar";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import Offline from "./pages/Offline";
 import { TaskProvider } from "./context/TaskContext";
@@ -55,6 +56,7 @@ function App() {
                 <Route path="/tasks" element={<Tasks />} />
                 <Route path="/calendar" element={<Calendar />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/admin" element={<Admin />} />
               </Route>
 
               <Route path="/offline" element={<Offline />} />

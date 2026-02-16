@@ -8,7 +8,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       isActive ? "bg-white/20" : "hover:bg-white/10",
     ].join(" ");
 
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -70,6 +70,14 @@ const Sidebar = ({ isOpen, onClose }) => {
           </span>
           Tasks
         </NavLink>
+        {user?.role === "admin" ? (
+          <NavLink to="/admin" className={linkClass} onClick={() => onClose?.()}>
+            <span className="flex h-5 w-5 items-center justify-center rounded-sm border-2 border-white text-[10px]">
+              A
+            </span>
+            Admin
+          </NavLink>
+        ) : null}
       </nav>
 
       <nav className="mt-auto flex flex-col gap-2 border-t border-white/20 pt-4">
