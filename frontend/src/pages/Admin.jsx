@@ -5,9 +5,10 @@ import CalendarQuickView from "../components/CalendarQuickView";
 import UserProfileButton from "../components/UserProfileButton";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL } from "../config/api";
+import { applyTheme } from "../utils/theme";
 
 const Admin = () => {
-  const { token, user } = useAuth();
+  const { token, user, updateUser } = useAuth();
   const [overview, setOverview] = useState(null);
   const [usersData, setUsersData] = useState({ items: [], pagination: null });
   const [usersLoading, setUsersLoading] = useState(false);
@@ -25,8 +26,11 @@ const Admin = () => {
   const [logsLoading, setLogsLoading] = useState(false);
   const [actionFeedback, setActionFeedback] = useState("");
   const [actionError, setActionError] = useState("");
+  const [themeSaving, setThemeSaving] = useState(false);
 
   const isAdmin = user?.role === "admin";
+  const currentTheme = user?.uiTheme || "light";
+  const isDark = currentTheme === "dark";
 
   const authHeaders = useMemo(
     () => ({
@@ -49,6 +53,25 @@ const Admin = () => {
       throw new Error(data.message || "Request failed.");
     }
     return data;
+  };
+
+  const handleThemeToggle = async () => {
+    const nextTheme = isDark ? "light" : "dark";
+    setThemeSaving(true);
+    setActionError("");
+    try {
+      const updated = await authedFetch(`${API_BASE_URL}/api/users/me`, {
+        method: "PATCH",
+        headers: authHeaders,
+        body: JSON.stringify({ uiTheme: nextTheme }),
+      });
+      updateUser(updated);
+      applyTheme(updated.uiTheme || nextTheme);
+    } catch (error) {
+      setActionError(error.message || "Unable to switch theme.");
+    } finally {
+      setThemeSaving(false);
+    }
   };
 
   const loadOverview = async () => {
@@ -219,6 +242,14 @@ const Admin = () => {
         title="Admin Panel"
         right={
           <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-4">
+            <button
+              type="button"
+              onClick={handleThemeToggle}
+              disabled={themeSaving}
+              className="min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              {themeSaving ? "Switching..." : isDark ? "Light Mode" : "Dark Mode"}
+            </button>
             <NotificationBell />
             <CalendarQuickView />
             <UserProfileButton />
@@ -227,55 +258,55 @@ const Admin = () => {
       />
 
       {actionFeedback ? (
-        <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700 dark:border-green-900/50 dark:bg-green-950/40 dark:text-green-300">
           {actionFeedback}
         </div>
       ) : null}
       {actionError ? (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
           {actionError}
         </div>
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <div className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold text-gray-500">Users</p>
-          <p className="mt-2 text-2xl font-bold text-slate-900">
+        <div className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-xs font-semibold text-gray-500 dark:text-slate-400">Users</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
             {overview?.users?.total ?? 0}
           </p>
         </div>
-        <div className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold text-gray-500">Active</p>
-          <p className="mt-2 text-2xl font-bold text-slate-900">
+        <div className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-xs font-semibold text-gray-500 dark:text-slate-400">Active</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
             {overview?.users?.active ?? 0}
           </p>
         </div>
-        <div className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold text-gray-500">Failed Logins (24h)</p>
-          <p className="mt-2 text-2xl font-bold text-slate-900">
+        <div className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-xs font-semibold text-gray-500 dark:text-slate-400">Failed Logins (24h)</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
             {overview?.logins?.failed24h ?? 0}
           </p>
         </div>
-        <div className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold text-gray-500">Tasks</p>
-          <p className="mt-2 text-2xl font-bold text-slate-900">
+        <div className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-xs font-semibold text-gray-500 dark:text-slate-400">Tasks</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
             {overview?.usage?.tasks ?? 0}
           </p>
         </div>
       </div>
 
-      <section className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm">
+      <section className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="mb-3 flex flex-wrap gap-2">
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search name/email"
-            className="min-h-11 min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm"
+            className="min-h-11 min-w-0 flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
           />
           <select
             value={roleFilter}
             onChange={(event) => setRoleFilter(event.target.value)}
-            className="min-h-11 rounded-md border border-gray-200 px-3 py-2 text-sm"
+            className="min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
           >
             <option value="all">All roles</option>
             <option value="admin">Admin</option>
@@ -284,7 +315,7 @@ const Admin = () => {
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="min-h-11 rounded-md border border-gray-200 px-3 py-2 text-sm"
+            className="min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
           >
             <option value="all">All status</option>
             <option value="active">Active</option>
@@ -301,28 +332,28 @@ const Admin = () => {
         </div>
 
         {usersError ? (
-          <p className="text-sm text-red-600">{usersError}</p>
+          <p className="text-sm text-red-600 dark:text-red-300">{usersError}</p>
         ) : usersLoading ? (
-          <p className="text-sm text-gray-500">Loading users...</p>
+          <p className="text-sm text-gray-500 dark:text-slate-300">Loading users...</p>
         ) : (
           <div className="space-y-2">
             {usersData.items.map((item) => (
               <div
                 key={item.id}
-                className="rounded-md border border-gray-100 bg-gray-50 p-3 text-sm"
+                className="rounded-md border border-gray-100 bg-gray-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-950/60"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <p className="font-semibold text-slate-900">
+                    <p className="font-semibold text-slate-900 dark:text-slate-100">
                       {item.name || "Unnamed"} ({item.role})
                     </p>
-                    <p className="text-gray-600">{item.email}</p>
+                    <p className="text-gray-600 dark:text-slate-300">{item.email}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={() => loadUserDetail(item.id)}
-                      className="rounded-md border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-700"
+                      className="rounded-md border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-700 dark:border-slate-700 dark:text-slate-200"
                     >
                       Details
                     </button>
@@ -399,7 +430,7 @@ const Admin = () => {
                           })
                         )
                       }
-                      className="rounded-md border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700"
+                      className="rounded-md border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 dark:border-slate-700 dark:text-slate-200"
                     >
                       Force Logout
                     </button>
@@ -428,7 +459,7 @@ const Admin = () => {
         )}
 
         <div className="mt-3 flex items-center justify-between">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-slate-400">
             Page {usersData.pagination?.page || 1} /{" "}
             {usersData.pagination?.totalPages || 1}
           </p>
@@ -437,7 +468,7 @@ const Admin = () => {
               type="button"
               disabled={!usersData.pagination || usersData.pagination.page <= 1}
               onClick={() => loadUsers((usersData.pagination?.page || 1) - 1)}
-              className="rounded-md border border-gray-200 px-3 py-1 text-xs disabled:opacity-50"
+              className="rounded-md border border-gray-200 px-3 py-1 text-xs text-gray-700 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200"
             >
               Prev
             </button>
@@ -448,7 +479,7 @@ const Admin = () => {
                 usersData.pagination.page >= usersData.pagination.totalPages
               }
               onClick={() => loadUsers((usersData.pagination?.page || 1) + 1)}
-              className="rounded-md border border-gray-200 px-3 py-1 text-xs disabled:opacity-50"
+              className="rounded-md border border-gray-200 px-3 py-1 text-xs text-gray-700 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200"
             >
               Next
             </button>
@@ -457,18 +488,18 @@ const Admin = () => {
       </section>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <section className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm">
-          <h3 className="text-sm font-bold text-slate-900">Recent Login Events</h3>
+        <section className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Recent Login Events</h3>
           {eventsLoading ? (
-            <p className="mt-2 text-sm text-gray-500">Loading...</p>
+            <p className="mt-2 text-sm text-gray-500 dark:text-slate-300">Loading...</p>
           ) : (
             <div className="mt-2 space-y-2 text-sm">
               {events.map((event) => (
-                <div key={event._id} className="rounded-md border border-gray-100 bg-gray-50 p-2">
-                  <p className="font-semibold text-slate-800">
+                <div key={event._id} className="rounded-md border border-gray-100 bg-gray-50 p-2 dark:border-slate-800 dark:bg-slate-950/60">
+                  <p className="font-semibold text-slate-800 dark:text-slate-100">
                     {event.email} - {event.success ? "Success" : "Failed"}
                   </p>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-gray-600 dark:text-slate-300">
                     {event.ip || "No IP"} | {new Date(event.createdAt).toLocaleString()}
                   </p>
                 </div>
@@ -477,20 +508,20 @@ const Admin = () => {
           )}
         </section>
 
-        <section className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm">
-          <h3 className="text-sm font-bold text-slate-900">Admin Audit Logs</h3>
+        <section className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Admin Audit Logs</h3>
           {logsLoading ? (
-            <p className="mt-2 text-sm text-gray-500">Loading...</p>
+            <p className="mt-2 text-sm text-gray-500 dark:text-slate-300">Loading...</p>
           ) : (
             <div className="mt-2 space-y-2 text-sm">
               {auditLogs.map((log) => (
-                <div key={log._id} className="rounded-md border border-gray-100 bg-gray-50 p-2">
-                  <p className="font-semibold text-slate-800">{log.action}</p>
-                  <p className="text-xs text-gray-600">
+                <div key={log._id} className="rounded-md border border-gray-100 bg-gray-50 p-2 dark:border-slate-800 dark:bg-slate-950/60">
+                  <p className="font-semibold text-slate-800 dark:text-slate-100">{log.action}</p>
+                  <p className="text-xs text-gray-600 dark:text-slate-300">
                     Admin: {log.adminId?.email || "unknown"} | Target:{" "}
                     {log.targetUserId?.email || "n/a"}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-slate-400">
                     {new Date(log.createdAt).toLocaleString()}
                   </p>
                 </div>
@@ -500,26 +531,26 @@ const Admin = () => {
         </section>
       </div>
 
-      <section className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm">
-        <h3 className="text-sm font-bold text-slate-900">Selected User</h3>
+      <section className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Selected User</h3>
         {activityLoading ? (
-          <p className="mt-2 text-sm text-gray-500">Loading details...</p>
+          <p className="mt-2 text-sm text-gray-500 dark:text-slate-300">Loading details...</p>
         ) : selectedUser ? (
           <div className="mt-2 space-y-3 text-sm">
-            <div className="rounded-md border border-gray-100 bg-gray-50 p-3">
-              <p className="font-semibold text-slate-800">{selectedUser.name}</p>
-              <p className="text-gray-600">{selectedUser.email}</p>
-              <p className="text-gray-600">Role: {selectedUser.role}</p>
-              <p className="text-gray-600">
+            <div className="rounded-md border border-gray-100 bg-gray-50 p-3 dark:border-slate-800 dark:bg-slate-950/60">
+              <p className="font-semibold text-slate-800 dark:text-slate-100">{selectedUser.name}</p>
+              <p className="text-gray-600 dark:text-slate-300">{selectedUser.email}</p>
+              <p className="text-gray-600 dark:text-slate-300">Role: {selectedUser.role}</p>
+              <p className="text-gray-600 dark:text-slate-300">
                 Metrics: {selectedUser.metrics?.tasks || 0} tasks,{" "}
                 {selectedUser.metrics?.activities || 0} activities
               </p>
             </div>
             <div className="space-y-2">
               {selectedActivities.map((item) => (
-                <div key={item._id} className="rounded-md border border-gray-100 bg-gray-50 p-2">
-                  <p className="font-semibold text-slate-800">{item.message}</p>
-                  <p className="text-xs text-gray-600">
+                <div key={item._id} className="rounded-md border border-gray-100 bg-gray-50 p-2 dark:border-slate-800 dark:bg-slate-950/60">
+                  <p className="font-semibold text-slate-800 dark:text-slate-100">{item.message}</p>
+                  <p className="text-xs text-gray-600 dark:text-slate-300">
                     {new Date(item.createdAt).toLocaleString()}
                   </p>
                 </div>
@@ -527,7 +558,7 @@ const Admin = () => {
             </div>
           </div>
         ) : (
-          <p className="mt-2 text-sm text-gray-500">Select a user to view details.</p>
+          <p className="mt-2 text-sm text-gray-500 dark:text-slate-300">Select a user to view details.</p>
         )}
       </section>
     </>
