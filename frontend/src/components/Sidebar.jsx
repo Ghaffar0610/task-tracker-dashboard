@@ -75,7 +75,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             <span className="flex h-5 w-5 items-center justify-center rounded-sm border-2 border-white text-[10px]">
               A
             </span>
-            Admin
+            Admin Panel
           </NavLink>
         ) : null}
       </nav>
