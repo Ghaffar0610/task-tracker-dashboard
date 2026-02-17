@@ -38,14 +38,7 @@ const AppShell = () => {
                   {new Date(pendingAccountEvent.createdAt).toLocaleString()}
                 </p>
               </div>
-              <div className="flex flex-col-reverse gap-2 border-t border-gray-100 px-5 py-4 sm:flex-row sm:justify-end dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => markAccountEventRead(pendingAccountEvent._id)}
-                  className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-900"
-                >
-                  Dismiss
-                </button>
+              <div className="flex border-t border-gray-100 px-5 py-4 sm:justify-end dark:border-slate-800">
                 <button
                   type="button"
                   onClick={async () => {
@@ -54,7 +47,7 @@ const AppShell = () => {
                   }}
                   className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
                 >
-                  Logout Now
+                  Logout
                 </button>
               </div>
             </div>

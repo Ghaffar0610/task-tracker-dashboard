@@ -238,7 +238,6 @@ const lockUser = async (req, res) => {
 
   target.lockedUntil = new Date(Date.now() + minutes * 60 * 1000);
   target.failedLoginAttempts = 0;
-  target.tokenVersion = (target.tokenVersion || 0) + 1;
   await target.save();
 
   await logAdminAction({
@@ -302,9 +301,6 @@ const setUserActiveState = async (req, res) => {
   }
 
   target.isActive = isActive;
-  if (!isActive) {
-    target.tokenVersion = (target.tokenVersion || 0) + 1;
-  }
   await target.save();
 
   await logAdminAction({
@@ -388,7 +384,6 @@ const resetUserPassword = async (req, res) => {
   target.passwordResetByAdmin = req.user.id;
   target.passwordResetAt = new Date();
   target.passwordUpdatedAt = new Date();
-  target.tokenVersion = (target.tokenVersion || 0) + 1;
   await target.save();
 
   await logAdminAction({
@@ -420,9 +415,6 @@ const forceLogoutUser = async (req, res) => {
     return res.status(404).json({ message: "User not found." });
   }
 
-  target.tokenVersion = (target.tokenVersion || 0) + 1;
-  await target.save();
-
   await logAdminAction({
     adminId: req.user.id,
     targetUserId: target._id,
@@ -431,10 +423,10 @@ const forceLogoutUser = async (req, res) => {
   await createAccountEvent({
     userId: target._id,
     action: "force_logout",
-    message: "Your active sessions were terminated by admin. Please log in again.",
+    message: "Admin requested you to log out and re-authenticate.",
   });
 
-  return res.status(200).json({ message: "User sessions invalidated." });
+  return res.status(200).json({ message: "Logout notice was sent to user." });
 };
 
 const listLoginEvents = async (req, res) => {

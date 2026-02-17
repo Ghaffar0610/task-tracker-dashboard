@@ -315,7 +315,6 @@ const adminResetUserPassword = async (req, res) => {
   targetUser.passwordUpdatedAt = new Date();
   targetUser.passwordResetByAdmin = req.user.id;
   targetUser.passwordResetAt = new Date();
-  targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
   await targetUser.save();
 
   return res.status(200).json({
