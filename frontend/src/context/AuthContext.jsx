@@ -33,6 +33,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_SESSION_KEY);
     return Boolean(storedToken);
   });
+  const [pendingAccountEvent, setPendingAccountEvent] = useState(null);
+  const accountEventLockRef = useRef(false);
   const logoutTimerRef = useRef(null);
   const hasHydratedRef = useRef(false);
 
@@ -64,6 +66,7 @@ export const AuthProvider = ({ children }) => {
     setToken("");
     setUser(null);
     setIsAuthenticated(false);
+    setPendingAccountEvent(null);
   }
 
   function scheduleAutoLogout(jwtToken) {
@@ -143,6 +146,51 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
+  const pollAccountEvents = async (authToken) => {
+    if (!authToken || accountEventLockRef.current) return;
+    if (pendingAccountEvent?.isRead === false) return;
+
+    accountEventLockRef.current = true;
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/users/me/account-events?unread=true&limit=1`,
+        {
+          headers: { Authorization: `Bearer ${authToken}` },
+        }
+      );
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403 || response.status === 423) {
+          logout();
+        }
+        return;
+      }
+
+      const next = Array.isArray(data.items) ? data.items[0] : null;
+      if (next) {
+        setPendingAccountEvent(next);
+      }
+    } catch {
+      // Silent polling failure.
+    } finally {
+      accountEventLockRef.current = false;
+    }
+  };
+
+  const markAccountEventRead = async (eventId) => {
+    if (!token || !eventId) return;
+    try {
+      await fetch(`${API_BASE_URL}/api/users/me/account-events/${eventId}/read`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch {
+      // Non-blocking on read acknowledgement.
+    } finally {
+      setPendingAccountEvent(null);
+    }
+  };
+
   const login = ({ token: authToken, user: authUser, remember }) => {
     scheduleAutoLogout(authToken);
     if (remember) {
@@ -171,9 +219,40 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  useEffect(() => {
+    if (!token || !isAuthenticated || !isReady) return;
+
+    pollAccountEvents(token);
+
+    const refresh = () => {
+      if (document.visibilityState === "hidden") return;
+      pollAccountEvents(token);
+    };
+
+    const intervalId = window.setInterval(refresh, 5000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [token, isAuthenticated, isReady, pendingAccountEvent?._id]);
+
   const value = useMemo(
-    () => ({ isAuthenticated, isReady, token, user, login, logout, updateUser }),
-    [isAuthenticated, isReady, token, user]
+    () => ({
+      isAuthenticated,
+      isReady,
+      token,
+      user,
+      pendingAccountEvent,
+      login,
+      logout,
+      updateUser,
+      markAccountEventRead,
+    }),
+    [isAuthenticated, isReady, token, user, pendingAccountEvent]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

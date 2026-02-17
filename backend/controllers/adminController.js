@@ -7,6 +7,7 @@ const Activity = require("../models/Activity");
 const FocusSession = require("../models/FocusSession");
 const LoginEvent = require("../models/LoginEvent");
 const AdminAuditLog = require("../models/AdminAuditLog");
+const AccountEvent = require("../models/AccountEvent");
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
@@ -25,6 +26,21 @@ const logAdminAction = async ({ adminId, targetUserId = null, action, metadata =
     targetUserId,
     action,
     metadata,
+  });
+};
+
+const createAccountEvent = async ({
+  userId,
+  action,
+  message,
+  metadata = {},
+}) => {
+  await AccountEvent.create({
+    userId,
+    action,
+    message,
+    metadata,
+    isRead: false,
   });
 };
 
@@ -231,6 +247,12 @@ const lockUser = async (req, res) => {
     action: "lock_user",
     metadata: { minutes },
   });
+  await createAccountEvent({
+    userId: target._id,
+    action: "lock_user",
+    message: `Your account was locked by admin for ${minutes} minute(s).`,
+    metadata: { minutes },
+  });
 
   return res.status(200).json({ message: "User locked.", lockedUntil: target.lockedUntil });
 };
@@ -254,6 +276,11 @@ const unlockUser = async (req, res) => {
     adminId: req.user.id,
     targetUserId: target._id,
     action: "unlock_user",
+  });
+  await createAccountEvent({
+    userId: target._id,
+    action: "unlock_user",
+    message: "Your account lock was removed by admin.",
   });
 
   return res.status(200).json({ message: "User unlocked." });
@@ -285,6 +312,13 @@ const setUserActiveState = async (req, res) => {
     targetUserId: target._id,
     action: isActive ? "activate_user" : "deactivate_user",
   });
+  await createAccountEvent({
+    userId: target._id,
+    action: isActive ? "activate_user" : "deactivate_user",
+    message: isActive
+      ? "Your account was re-activated by admin."
+      : "Your account was deactivated by admin.",
+  });
 
   return res.status(200).json({ message: `User ${isActive ? "activated" : "deactivated"}.` });
 };
@@ -312,6 +346,12 @@ const changeUserRole = async (req, res) => {
     adminId: req.user.id,
     targetUserId: target._id,
     action: "change_role",
+    metadata: { from: previousRole, to: role },
+  });
+  await createAccountEvent({
+    userId: target._id,
+    action: "change_role",
+    message: `Your account role was changed from ${previousRole} to ${role} by admin.`,
     metadata: { from: previousRole, to: role },
   });
 
@@ -356,6 +396,12 @@ const resetUserPassword = async (req, res) => {
     targetUserId: target._id,
     action: "reset_password",
   });
+  await createAccountEvent({
+    userId: target._id,
+    action: "reset_password",
+    message:
+      "Your password was reset by admin. Please log in with the temporary password and change it immediately.",
+  });
 
   return res.status(200).json({
     message: "Temporary password set. User must change password on next login.",
@@ -381,6 +427,11 @@ const forceLogoutUser = async (req, res) => {
     adminId: req.user.id,
     targetUserId: target._id,
     action: "force_logout",
+  });
+  await createAccountEvent({
+    userId: target._id,
+    action: "force_logout",
+    message: "Your active sessions were terminated by admin. Please log in again.",
   });
 
   return res.status(200).json({ message: "User sessions invalidated." });

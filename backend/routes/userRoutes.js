@@ -12,6 +12,8 @@ const {
   regenerateRecoveryCodes,
   getReferrals,
   adminResetUserPassword,
+  getMyAccountEvents,
+  markAccountEventRead,
 } = require("../controllers/userController");
 
 const router = express.Router();
@@ -37,6 +39,8 @@ router.get("/me/notification-preferences", getNotificationPreferences);
 router.put("/me/notification-preferences", updateNotificationPreferences);
 router.get("/me/recovery-codes/status", getRecoveryCodeStatus);
 router.post("/me/recovery-codes/regenerate", regenerateRecoveryCodes);
+router.get("/me/account-events", getMyAccountEvents);
+router.patch("/me/account-events/:id/read", markAccountEventRead);
 router.post("/admin/:id/reset-password", adminOnly, adminResetUserPassword);
 
 module.exports = router;

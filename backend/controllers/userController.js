@@ -2,6 +2,7 @@ const User = require("../models/User");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
+const AccountEvent = require("../models/AccountEvent");
 const { generateRecoveryCodes } = require("../services/recoveryCodeService");
 const { ensureUserHasReferralCode } = require("../services/referralService");
 const notificationTypes = [
@@ -234,6 +235,42 @@ const regenerateRecoveryCodes = async (req, res) => {
   });
 };
 
+const getMyAccountEvents = async (req, res) => {
+  const unreadOnly = req.query.unread === "true";
+  const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 20);
+
+  const filter = { userId: req.user.id };
+  if (unreadOnly) {
+    filter.isRead = false;
+  }
+
+  const items = await AccountEvent.find(filter)
+    .sort({ createdAt: -1 })
+    .limit(limit);
+
+  return res.status(200).json({ items });
+};
+
+const markAccountEventRead = async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid account event id." });
+  }
+
+  const item = await AccountEvent.findOneAndUpdate(
+    { _id: id, userId: req.user.id },
+    { $set: { isRead: true, readAt: new Date() } },
+    { new: true }
+  );
+
+  if (!item) {
+    return res.status(404).json({ message: "Account event not found." });
+  }
+
+  return res.status(200).json(item);
+};
+
 const generateTemporaryPassword = (length = 12) => {
   const chars =
     "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*";
@@ -297,4 +334,6 @@ module.exports = {
   regenerateRecoveryCodes,
   getReferrals,
   adminResetUserPassword,
+  getMyAccountEvents,
+  markAccountEventRead,
 };
