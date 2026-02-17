@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL } from "../config/api";
+import { applyTheme, getStoredTheme, saveTheme } from "../utils/theme";
 
 const Login = () => {
   const { isAuthenticated, login } = useAuth();
@@ -11,6 +12,7 @@ const Login = () => {
   const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [theme, setTheme] = useState(() => getStoredTheme());
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   useEffect(() => {
@@ -18,6 +20,11 @@ const Login = () => {
       navigate("/dashboard", { replace: true });
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    applyTheme(theme);
+    saveTheme(theme);
+  }, [theme]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -63,6 +70,13 @@ const Login = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#f1f3f8] px-4 dark:bg-slate-950">
+      <button
+        type="button"
+        onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
+        className="absolute right-4 top-4 rounded-md border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 sm:right-6 sm:top-6"
+      >
+        {theme === "dark" ? "Light Mode" : "Dark Mode"}
+      </button>
       <div className="w-full max-w-sm rounded-xl border border-gray-100 bg-white p-8 shadow-md dark:border-slate-800 dark:bg-slate-900">
         <h1 className="text-center text-2xl font-semibold text-gray-800 dark:text-slate-100">
           Task Tracker
