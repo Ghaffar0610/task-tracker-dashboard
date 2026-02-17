@@ -13,18 +13,18 @@ function NotFound() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f1f3f8] flex items-center justify-center px-4">
-      <div className="w-full max-w-xl rounded-2xl bg-white border border-gray-100 shadow-md p-8 text-center">
+    <div className="flex min-h-screen items-center justify-center bg-[#f1f3f8] px-4 dark:bg-slate-950">
+      <div className="w-full max-w-xl rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-md dark:border-slate-800 dark:bg-slate-900">
         <img
           src={notFoundImage}
           alt="Page not found illustration"
           className="mx-auto mb-6 h-24 w-24 rounded-full object-cover"
         />
-        <h1 className="text-4xl font-bold text-[#1e293b]">404</h1>
-        <h2 className="mt-2 text-2xl font-semibold text-[#1e293b]">
+        <h1 className="text-4xl font-bold text-[#1e293b] dark:text-slate-100">404</h1>
+        <h2 className="mt-2 text-2xl font-semibold text-[#1e293b] dark:text-slate-100">
           Page Not Found
         </h2>
-        <p className="mt-3 text-sm text-gray-500">
+        <p className="mt-3 text-sm text-gray-500 dark:text-slate-300">
           Oops! The page you are looking for does not exist.
         </p>
         <button

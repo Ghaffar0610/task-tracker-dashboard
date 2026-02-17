@@ -174,25 +174,25 @@ const Dashboard = () => {
         />
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-5 border-b border-gray-100">
-          <h3 className="font-bold text-lg text-[#1e293b]">Focus Mode</h3>
+      <div className="overflow-hidden rounded-lg border border-gray-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="border-b border-gray-100 p-5 dark:border-slate-800">
+          <h3 className="text-lg font-bold text-[#1e293b] dark:text-slate-100">Focus Mode</h3>
         </div>
         <div className="p-5 space-y-4">
           {focusError ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
               {focusError}
             </div>
           ) : null}
 
           <div className="flex flex-wrap items-center gap-4">
-            <div className="text-3xl font-bold text-[#1e293b]">
+            <div className="text-3xl font-bold text-[#1e293b] dark:text-slate-100">
               {isActive ? formatTime(remainingSeconds) : "00:00"}
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-slate-300">
               {isActive ? `Session: ${durationMinutes} min` : "Not active"}
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-slate-300">
               Tasks completed: {tasksCompleted}
             </div>
           </div>
@@ -204,12 +204,12 @@ const Dashboard = () => {
               max={180}
               value={focusMinutes}
               onChange={(event) => setFocusMinutes(Number(event.target.value))}
-              className="w-24 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 sm:w-28"
+              className="w-24 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 sm:w-28 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-blue-900"
             />
             <button
               type="button"
               onClick={() => startFocus(25)}
-              className="rounded-md border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              className="rounded-md border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
               disabled={isActive}
             >
               Start 25
@@ -217,7 +217,7 @@ const Dashboard = () => {
             <button
               type="button"
               onClick={() => startFocus(50)}
-              className="rounded-md border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              className="rounded-md border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
               disabled={isActive}
             >
               Start 50
@@ -233,7 +233,7 @@ const Dashboard = () => {
             <button
               type="button"
               onClick={stopFocus}
-              className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+              className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
               disabled={!isActive}
             >
               Stop
@@ -241,25 +241,25 @@ const Dashboard = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="rounded-lg border border-gray-100 p-4">
-              <p className="text-xs font-semibold text-gray-400">Streak</p>
-              <p className="mt-2 text-2xl font-bold text-[#1e293b]">
+            <div className="rounded-lg border border-gray-100 p-4 dark:border-slate-800">
+              <p className="text-xs font-semibold text-gray-400 dark:text-slate-400">Streak</p>
+              <p className="mt-2 text-2xl font-bold text-[#1e293b] dark:text-slate-100">
                 {summary?.streak ?? 0} days
               </p>
             </div>
-            <div className="rounded-lg border border-gray-100 p-4">
-              <p className="text-xs font-semibold text-gray-400">
+            <div className="rounded-lg border border-gray-100 p-4 dark:border-slate-800">
+              <p className="text-xs font-semibold text-gray-400 dark:text-slate-400">
                 Focus Score (7d)
               </p>
-              <p className="mt-2 text-2xl font-bold text-[#1e293b]">
+              <p className="mt-2 text-2xl font-bold text-[#1e293b] dark:text-slate-100">
                 {summary?.focusScore ?? 0}
               </p>
             </div>
-            <div className="rounded-lg border border-gray-100 p-4">
-              <p className="text-xs font-semibold text-gray-400">
+            <div className="rounded-lg border border-gray-100 p-4 dark:border-slate-800">
+              <p className="text-xs font-semibold text-gray-400 dark:text-slate-400">
                 Tasks Completed (7d)
               </p>
-              <p className="mt-2 text-2xl font-bold text-[#1e293b]">
+              <p className="mt-2 text-2xl font-bold text-[#1e293b] dark:text-slate-100">
                 {summary?.totalTasks ?? 0}
               </p>
             </div>
@@ -267,9 +267,9 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-5 border-b border-gray-100">
-          <h3 className="font-bold text-lg text-[#1e293b]">Recent Activities</h3>
+      <div className="overflow-hidden rounded-lg border border-gray-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="border-b border-gray-100 p-5 dark:border-slate-800">
+          <h3 className="text-lg font-bold text-[#1e293b] dark:text-slate-100">Recent Activities</h3>
         </div>
 
         <div className="p-5 space-y-4">
@@ -277,7 +277,7 @@ const Dashboard = () => {
             <select
               value={activityAction}
               onChange={(event) => setActivityAction(event.target.value)}
-              className="min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-blue-900"
             >
               <option value="all">All Types</option>
               <option value="created">Created</option>
@@ -288,7 +288,7 @@ const Dashboard = () => {
             <select
               value={activityRange}
               onChange={(event) => setActivityRange(event.target.value)}
-              className="min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-blue-900"
             >
               <option value="all">All Time</option>
               <option value="1">Today</option>
@@ -300,27 +300,27 @@ const Dashboard = () => {
               value={activityQuery}
               onChange={(event) => setActivityQuery(event.target.value)}
               placeholder="Search activity..."
-              className="min-h-11 min-w-0 flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="min-h-11 min-w-0 flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-blue-900"
             />
           </div>
 
           {activityError ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
               {activityError}
             </div>
           ) : null}
 
           {activityLoading ? (
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-slate-300">
               Loading recent activity...
             </div>
           ) : activities.length === 0 ? (
-            <div className="text-sm text-gray-500">No recent activity yet.</div>
+            <div className="text-sm text-gray-500 dark:text-slate-300">No recent activity yet.</div>
           ) : (
             activities.map((activity) => (
               <div
                 key={activity._id}
-                className="flex flex-wrap items-start gap-3 border-b border-gray-100 pb-4 last:border-b-0 last:pb-0 sm:flex-nowrap sm:items-center sm:gap-4"
+                className="flex flex-wrap items-start gap-3 border-b border-gray-100 pb-4 last:border-b-0 last:pb-0 sm:flex-nowrap sm:items-center sm:gap-4 dark:border-slate-800"
               >
                 <div
                   className={`h-4 w-4 rounded-sm ${
@@ -330,10 +330,10 @@ const Dashboard = () => {
                   }`}
                 ></div>
                 <div className="min-w-0 flex flex-1 flex-col">
-                  <p className="text-gray-700 text-sm">
+                  <p className="text-sm text-gray-700 dark:text-slate-200">
                     {activity.message}
                   </p>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-gray-400 dark:text-slate-400">
                     {formatDate(activity.createdAt)}
                   </span>
                 </div>
@@ -353,37 +353,37 @@ const Dashboard = () => {
       {deleteTarget ? (
         <div className="fixed inset-0 z-50 bg-black/40">
           <div className="flex h-full w-full items-end justify-center px-4 pb-4 pt-8 sm:items-center sm:pb-0">
-            <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-xl bg-white shadow-xl">
-              <div className="flex items-center justify-between border-b border-gray-200 px-4 py-4 sm:px-6">
-                <h2 className="text-lg font-semibold text-[#1e293b]">
+            <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-xl bg-white shadow-xl dark:bg-slate-950">
+              <div className="flex items-center justify-between border-b border-gray-200 px-4 py-4 sm:px-6 dark:border-slate-800">
+                <h2 className="text-lg font-semibold text-[#1e293b] dark:text-slate-100">
                   Confirm Deletion
                 </h2>
                 <button
                   type="button"
                   onClick={() => setDeleteTarget(null)}
-                  className="text-xl text-gray-400 hover:text-gray-600"
+                  className="text-xl text-gray-400 hover:text-gray-600 dark:text-slate-400 dark:hover:text-slate-200"
                 >
                   x
                 </button>
               </div>
               <div className="space-y-4 px-4 py-5 sm:px-6">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-slate-300">
                   Enter your password to delete this activity.
                 </p>
                 <input
                   type="password"
                   value={deletePassword}
                   onChange={(event) => setDeletePassword(event.target.value)}
-                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-blue-900"
                 />
                 {deleteError ? (
                   <p className="text-sm text-red-500">{deleteError}</p>
                 ) : null}
-                <div className="flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end sm:gap-3">
+                <div className="flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end sm:gap-3 dark:border-slate-800">
                   <button
                     type="button"
                     onClick={() => setDeleteTarget(null)}
-                    className="rounded-md border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                    className="rounded-md border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
                     disabled={deleteLoading}
                   >
                     Cancel

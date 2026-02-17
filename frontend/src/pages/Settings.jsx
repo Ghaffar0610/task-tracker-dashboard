@@ -15,7 +15,7 @@ const sections = [
 ];
 
 const inputClass =
-  "w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200";
+  "w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-blue-900";
 
 const Settings = () => {
   const { token, user, updateUser } = useAuth();
@@ -181,7 +181,7 @@ const Settings = () => {
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className="rounded-lg border border-gray-100 bg-white p-3 shadow-sm">
+        <aside className="rounded-lg border border-gray-100 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <nav className="flex gap-2 overflow-x-auto lg:flex-col">
             {sections.map((section) => (
               <button
@@ -194,8 +194,8 @@ const Settings = () => {
                 className={[
                   "min-h-11 rounded-md px-3 py-2 text-left text-sm font-semibold transition-colors",
                   activeSection === section.id
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-gray-600 hover:bg-gray-50",
+                    ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+                    : "text-gray-600 hover:bg-gray-50 dark:text-slate-300 dark:hover:bg-slate-800",
                 ].join(" ")}
               >
                 {section.label}
@@ -204,9 +204,9 @@ const Settings = () => {
           </nav>
         </aside>
 
-        <section className="rounded-lg border border-gray-100 bg-white p-5 shadow-sm">
-          <div className="mb-4 border-b border-gray-100 pb-4">
-            <h2 className="text-xl font-bold text-[#1e293b]">{activeLabel}</h2>
+        <section className="rounded-lg border border-gray-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="mb-4 border-b border-gray-100 pb-4 dark:border-slate-800">
+            <h2 className="text-xl font-bold text-[#1e293b] dark:text-slate-100">{activeLabel}</h2>
           </div>
 
           {feedback.message ? (
@@ -214,8 +214,8 @@ const Settings = () => {
               className={[
                 "mb-4 rounded-md border p-3 text-sm",
                 feedback.type === "success"
-                  ? "border-green-200 bg-green-50 text-green-700"
-                  : "border-red-200 bg-red-50 text-red-600",
+                  ? "border-green-200 bg-green-50 text-green-700 dark:border-green-900/50 dark:bg-green-950/40 dark:text-green-300"
+                  : "border-red-200 bg-red-50 text-red-600 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300",
               ].join(" ")}
             >
               {feedback.message}
@@ -226,7 +226,7 @@ const Settings = () => {
             <form className="space-y-4" onSubmit={handlePasswordSave}>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <label className="space-y-2 md:col-span-2">
-                  <span className="text-sm font-semibold text-gray-600">
+                  <span className="text-sm font-semibold text-gray-600 dark:text-slate-300">
                     Current Password
                   </span>
                   <input
@@ -242,7 +242,7 @@ const Settings = () => {
                   />
                 </label>
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-gray-600">
+                  <span className="text-sm font-semibold text-gray-600 dark:text-slate-300">
                     New Password
                   </span>
                   <input
@@ -258,7 +258,7 @@ const Settings = () => {
                   />
                 </label>
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-gray-600">
+                  <span className="text-sm font-semibold text-gray-600 dark:text-slate-300">
                     Confirm Password
                   </span>
                   <input
@@ -287,7 +287,7 @@ const Settings = () => {
           {activeSection === "appearance" ? (
             <form className="space-y-4" onSubmit={handleThemeSave}>
               <label className="space-y-2 block max-w-sm">
-                <span className="text-sm font-semibold text-gray-600">Theme</span>
+                <span className="text-sm font-semibold text-gray-600 dark:text-slate-300">Theme</span>
                 <select
                   className={inputClass}
                   value={appearanceForm.theme}
@@ -407,7 +407,7 @@ const Settings = () => {
                   Team Members (Referred)
                 </p>
                 {referralsError ? (
-                  <p className="mt-2 text-sm text-red-600">{referralsError}</p>
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-300">{referralsError}</p>
                 ) : referralsLoading ? (
                   <p className="mt-2 text-sm text-gray-500 dark:text-slate-300">
                     Loading members...
@@ -447,12 +447,12 @@ const Settings = () => {
 
           {activeSection === "about" ? (
             <div className="space-y-4">
-              <div className="rounded-md border border-gray-100 bg-gray-50 p-4">
-                <p className="text-sm text-gray-500">Task Tracker Dashboard</p>
-                <p className="mt-1 text-lg font-semibold text-[#1e293b]">v1.0.0</p>
+              <div className="rounded-md border border-gray-100 bg-gray-50 p-4 dark:border-slate-800 dark:bg-slate-950/60">
+                <p className="text-sm text-gray-500 dark:text-slate-300">Task Tracker Dashboard</p>
+                <p className="mt-1 text-lg font-semibold text-[#1e293b] dark:text-slate-100">v1.0.0</p>
               </div>
-              <div className="rounded-md border border-gray-100 p-4">
-                <p className="text-sm text-gray-600">
+              <div className="rounded-md border border-gray-100 p-4 dark:border-slate-800">
+                <p className="text-sm text-gray-600 dark:text-slate-300">
                   Support:{" "}
                   <a
                     href="mailto:support@tasktracker.app"

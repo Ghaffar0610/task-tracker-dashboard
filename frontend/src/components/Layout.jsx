@@ -23,7 +23,7 @@ const Layout = ({ children }) => {
           <button
             type="button"
             onClick={() => setIsSidebarOpen(true)}
-            className="relative inline-flex h-11 w-11 items-center justify-center rounded-md border border-gray-200 text-[#1e293b]"
+            className="relative inline-flex h-11 w-11 items-center justify-center rounded-md border border-gray-200 text-[#1e293b] dark:border-slate-700 dark:text-slate-100"
             aria-label="Open menu"
           >
             <span className="absolute block h-0.5 w-5 translate-y-1.5 bg-current"></span>

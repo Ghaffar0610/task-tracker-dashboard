@@ -65,39 +65,39 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f1f3f8] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm bg-white rounded-xl shadow-md border border-gray-100 p-8">
-        <h1 className="text-center text-2xl font-semibold text-gray-800">
+    <div className="flex min-h-screen items-center justify-center bg-[#f1f3f8] px-4 dark:bg-slate-950">
+      <div className="w-full max-w-sm rounded-xl border border-gray-100 bg-white p-8 shadow-md dark:border-slate-800 dark:bg-slate-900">
+        <h1 className="text-center text-2xl font-semibold text-gray-800 dark:text-slate-100">
           Task Tracker
         </h1>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-600">
+            <label className="block text-sm font-semibold text-gray-600 dark:text-slate-300">
               Name
             </label>
             <input
               type="text"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="mt-2 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-blue-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-600">
+            <label className="block text-sm font-semibold text-gray-600 dark:text-slate-300">
               Email
             </label>
             <input
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="mt-2 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-blue-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-600">
+            <label className="block text-sm font-semibold text-gray-600 dark:text-slate-300">
               Password
             </label>
             <div className="mt-2 flex items-center gap-2">
@@ -105,12 +105,12 @@ const Register = () => {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-blue-900"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="rounded-md border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                className="rounded-md border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
               >
                 {showPassword ? "Hide" : "Show"}
               </button>
@@ -118,7 +118,7 @@ const Register = () => {
           </div>
 
           <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 text-sm text-gray-600">
+            <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-slate-300">
               <input
                 type="checkbox"
                 checked={remember}

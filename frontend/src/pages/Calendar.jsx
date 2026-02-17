@@ -17,8 +17,8 @@ const Calendar = () => {
         }
       />
 
-      <div className="rounded-lg border border-gray-100 bg-white p-6 shadow-sm">
-        <p className="text-sm text-gray-600">
+      <div className="rounded-lg border border-gray-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <p className="text-sm text-gray-600 dark:text-slate-300">
           Calendar view is a placeholder for now. Next step is wiring task due
           dates into a real calendar grid.
         </p>

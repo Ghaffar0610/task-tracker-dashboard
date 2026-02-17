@@ -23,7 +23,7 @@ const UserAvatar = () => {
   const avatarSrc = getAvatarSrc(user?.avatarUrl);
 
   return (
-    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200">
+    <div className="h-10 w-10 overflow-hidden rounded-full border-2 border-gray-200 dark:border-slate-700">
       {avatarSrc ? (
         <img
           src={avatarSrc}
