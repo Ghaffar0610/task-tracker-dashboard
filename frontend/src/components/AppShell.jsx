@@ -2,15 +2,15 @@ import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Layout from "./Layout";
 import { useAuth } from "../context/AuthContext";
-import { applyTheme } from "../utils/theme";
+import { applyTheme, getStoredTheme } from "../utils/theme";
 
 const AppShell = () => {
   const { user, pendingAccountEvent, markAccountEventRead, logout } = useAuth();
   const requiresLogout = Boolean(pendingAccountEvent?.metadata?.requiresLogout);
 
   useEffect(() => {
-    // Default to light so refresh doesn't unexpectedly switch to OS dark mode.
-    applyTheme(user?.uiTheme || "light");
+    const storedTheme = getStoredTheme();
+    applyTheme(user?.uiTheme || storedTheme || "light");
   }, [user?.uiTheme]);
 
   return (

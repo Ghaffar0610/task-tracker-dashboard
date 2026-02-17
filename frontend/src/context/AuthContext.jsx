@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { API_BASE_URL } from "../config/api";
+import { getStoredTheme } from "../utils/theme";
 
 const AuthContext = createContext(null);
 
@@ -192,20 +193,24 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = ({ token: authToken, user: authUser, remember }) => {
+    const storedTheme = getStoredTheme();
+    const mergedUser =
+      authUser && storedTheme ? { ...authUser, uiTheme: storedTheme } : authUser;
+
     scheduleAutoLogout(authToken);
     if (remember) {
       localStorage.setItem(TOKEN_KEY, authToken);
-      localStorage.setItem(USER_KEY, JSON.stringify(authUser));
+      localStorage.setItem(USER_KEY, JSON.stringify(mergedUser));
       sessionStorage.removeItem(TOKEN_SESSION_KEY);
       sessionStorage.removeItem(USER_SESSION_KEY);
     } else {
       sessionStorage.setItem(TOKEN_SESSION_KEY, authToken);
-      sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(authUser));
+      sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(mergedUser));
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
     }
     setToken(authToken);
-    setUser(authUser);
+    setUser(mergedUser);
     setIsAuthenticated(true);
     setIsReady(true);
   };

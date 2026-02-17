@@ -10,11 +10,12 @@ export const applyTheme = (theme) => {
 
   const shouldUseDark = theme === "dark" || (theme === "system" && prefersDark);
   document.documentElement.classList.toggle("dark", Boolean(shouldUseDark));
+  saveTheme(theme);
 };
 
 export const getStoredTheme = () => {
-  if (typeof window === "undefined") return "light";
-  return localStorage.getItem(THEME_STORAGE_KEY) || "light";
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(THEME_STORAGE_KEY);
 };
 
 export const saveTheme = (theme) => {

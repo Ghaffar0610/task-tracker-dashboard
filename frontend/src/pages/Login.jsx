@@ -12,7 +12,7 @@ const Login = () => {
   const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [theme, setTheme] = useState(() => getStoredTheme());
+  const [theme, setTheme] = useState(() => getStoredTheme() || "light");
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   useEffect(() => {
@@ -60,6 +60,15 @@ const Login = () => {
         setError(data.message || "Login failed.");
         return;
       }
+
+      await fetch(`${API_BASE_URL}/api/users/me`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.token}`,
+        },
+        body: JSON.stringify({ uiTheme: theme }),
+      }).catch(() => null);
 
       login({ token: data.token, user: data.user, remember });
       navigate("/dashboard", { replace: true });
