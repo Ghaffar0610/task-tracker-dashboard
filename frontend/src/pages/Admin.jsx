@@ -57,10 +57,12 @@ const Admin = () => {
     setOverview(data);
   };
 
-  const loadUsers = async (page = userPage) => {
+  const loadUsers = async (page = userPage, { silent = false } = {}) => {
     if (!token || !isAdmin) return;
-    setUsersLoading(true);
-    setUsersError("");
+    if (!silent) {
+      setUsersLoading(true);
+      setUsersError("");
+    }
     try {
       const params = new URLSearchParams({
         page: String(page),
@@ -74,41 +76,55 @@ const Admin = () => {
       setUsersData(data);
       setUserPage(page);
     } catch (error) {
-      setUsersError(error.message || "Unable to load users.");
+      if (!silent) {
+        setUsersError(error.message || "Unable to load users.");
+      }
     } finally {
-      setUsersLoading(false);
+      if (!silent) {
+        setUsersLoading(false);
+      }
     }
   };
 
-  const loadLoginEvents = async () => {
+  const loadLoginEvents = async ({ silent = false } = {}) => {
     if (!token || !isAdmin) return;
-    setEventsLoading(true);
+    if (!silent) {
+      setEventsLoading(true);
+    }
     try {
       const data = await authedFetch(
         `${API_BASE_URL}/api/admin/login-events?limit=10&page=1`
       );
       setEvents(data.items || []);
     } finally {
-      setEventsLoading(false);
+      if (!silent) {
+        setEventsLoading(false);
+      }
     }
   };
 
-  const loadAuditLogs = async () => {
+  const loadAuditLogs = async ({ silent = false } = {}) => {
     if (!token || !isAdmin) return;
-    setLogsLoading(true);
+    if (!silent) {
+      setLogsLoading(true);
+    }
     try {
       const data = await authedFetch(
         `${API_BASE_URL}/api/admin/audit-logs?limit=10&page=1`
       );
       setAuditLogs(data.items || []);
     } finally {
-      setLogsLoading(false);
+      if (!silent) {
+        setLogsLoading(false);
+      }
     }
   };
 
-  const loadUserDetail = async (userId) => {
-    setActivityLoading(true);
-    setActionError("");
+  const loadUserDetail = async (userId, { silent = false } = {}) => {
+    if (!silent) {
+      setActivityLoading(true);
+      setActionError("");
+    }
     try {
       const [detail, activities] = await Promise.all([
         authedFetch(`${API_BASE_URL}/api/admin/users/${userId}`),
@@ -117,9 +133,13 @@ const Admin = () => {
       setSelectedUser(detail);
       setSelectedActivities(activities.items || []);
     } catch (error) {
-      setActionError(error.message || "Unable to load user detail.");
+      if (!silent) {
+        setActionError(error.message || "Unable to load user detail.");
+      }
     } finally {
-      setActivityLoading(false);
+      if (!silent) {
+        setActivityLoading(false);
+      }
     }
   };
 
@@ -145,6 +165,45 @@ const Admin = () => {
     loadLoginEvents();
     loadAuditLogs();
   }, [token, isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin || !token) return;
+
+    const refresh = async () => {
+      if (document.visibilityState === "hidden") return;
+      try {
+        await Promise.all([
+          loadOverview(),
+          loadUsers(userPage, { silent: true }),
+          loadLoginEvents({ silent: true }),
+          loadAuditLogs({ silent: true }),
+          selectedUser?.id
+            ? loadUserDetail(selectedUser.id, { silent: true })
+            : Promise.resolve(),
+        ]);
+      } catch {
+        // Keep realtime refresh non-blocking.
+      }
+    };
+
+    const intervalId = window.setInterval(refresh, 5000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [
+    token,
+    isAdmin,
+    userPage,
+    search,
+    roleFilter,
+    statusFilter,
+    selectedUser?.id,
+  ]);
 
   if (!isAdmin) {
     return (
