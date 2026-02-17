@@ -250,7 +250,7 @@ const lockUser = async (req, res) => {
     userId: target._id,
     action: "lock_user",
     message: `Your account was locked by admin for ${minutes} minute(s).`,
-    metadata: { minutes },
+    metadata: { minutes, requiresLogout: true },
   });
 
   return res.status(200).json({ message: "User locked.", lockedUntil: target.lockedUntil });
@@ -280,6 +280,7 @@ const unlockUser = async (req, res) => {
     userId: target._id,
     action: "unlock_user",
     message: "Your account lock was removed by admin.",
+    metadata: { requiresLogout: false },
   });
 
   return res.status(200).json({ message: "User unlocked." });
@@ -314,6 +315,7 @@ const setUserActiveState = async (req, res) => {
     message: isActive
       ? "Your account was re-activated by admin."
       : "Your account was deactivated by admin.",
+    metadata: { requiresLogout: !isActive },
   });
 
   return res.status(200).json({ message: `User ${isActive ? "activated" : "deactivated"}.` });
@@ -348,7 +350,7 @@ const changeUserRole = async (req, res) => {
     userId: target._id,
     action: "change_role",
     message: `Your account role was changed from ${previousRole} to ${role} by admin.`,
-    metadata: { from: previousRole, to: role },
+    metadata: { from: previousRole, to: role, requiresLogout: true },
   });
 
   return res.status(200).json({ message: "User role updated." });
@@ -396,6 +398,7 @@ const resetUserPassword = async (req, res) => {
     action: "reset_password",
     message:
       "Your password was reset by admin. Please log in with the temporary password and change it immediately.",
+    metadata: { requiresLogout: true },
   });
 
   return res.status(200).json({
@@ -424,6 +427,7 @@ const forceLogoutUser = async (req, res) => {
     userId: target._id,
     action: "force_logout",
     message: "Admin requested you to log out and re-authenticate.",
+    metadata: { requiresLogout: true },
   });
 
   return res.status(200).json({ message: "Logout notice was sent to user." });
