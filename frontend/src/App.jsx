@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -66,6 +67,7 @@ function App() {
             <Offline />
           )}
         </BrowserRouter>
+        <SpeedInsights />
         </TaskProvider>
       </FocusProvider>
     </AuthProvider>
