@@ -148,46 +148,7 @@ If you use multiple frontend domains, comma-separate them:
 CLIENT_URL=https://your-frontend.vercel.app,https://www.yourdomain.com
 ```
 
-## 7. Capture and Add Screenshots
-
-Capture these screens from the deployed frontend:
-- Login page
-- Register/Forgot Password page
-- Dashboard
-- Tasks page
-- Calendar page
-- Settings/Admin page (if role-based)
-
-Save images in repo, for example:
-
-```text
-image/ui/login.png
-image/ui/dashboard.png
-image/ui/tasks.png
-image/ui/calendar.png
-image/ui/settings.png
-```
-
-Then add them to README:
-
-```md
-## UI Screenshots
-
-### Login
-![Login](image/ui/login.png)
-
-### Dashboard
-![Dashboard](image/ui/dashboard.png)
-
-### Tasks
-![Tasks](image/ui/tasks.png)
-
-### Calendar
-![Calendar](image/ui/calendar.png)
-```
-
-
-## 9. Useful Commands
+## 4. Useful Commands
 
 From `backend/`:
 
@@ -204,7 +165,7 @@ npm run build
 npm run preview
 ```
 
-## 10. Common Issues
+## 07 Common Issues
 
 - `CORS error`: set correct `CLIENT_URL` on backend env and redeploy backend.
 - `Network error from frontend`: ensure `VITE_API_URL` points to deployed backend URL.
