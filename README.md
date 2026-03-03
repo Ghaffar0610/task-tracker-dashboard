@@ -2,14 +2,6 @@
 
 Full-stack task management application with authentication, tasks, calendar/focus tracking, notifications, and admin capabilities.
 
-## Deliverables Checklist
-- [x] GitHub repository with frontend and backend code
-- [x] Root `README.md` with complete setup and deployment instructions
-- [ ] Deployed frontend URL
-- [ ] Deployed backend URL
-- [ ] UI screenshots added in repo
-
-After deployment, replace placeholder links in this README and check all boxes.
 
 ## Repository Structure
 
@@ -32,7 +24,7 @@ After deployment, replace placeholder links in this README and check all boxes.
 - MongoDB Atlas connection string
 - GitHub account
 - Vercel account (frontend)
-- Render account (backend)
+- Vercel account (backend)
 
 ## 1. Clone and Install
 
@@ -105,10 +97,10 @@ npm run dev
 App URL:
 - `http://localhost:5173`
 
-## 4. Deploy Backend (Render)
+## 4. Deploy Backend (cercel)
 
 1. Push latest code to GitHub.
-2. In Render: New + > Web Service.
+2. In Vercel: New + > project.
 3. Connect repository: `Ghaffar0610/task-tracker-dashboard`.
 4. Configure:
    - Root Directory: `backend`
@@ -194,19 +186,6 @@ Then add them to README:
 ![Calendar](image/ui/calendar.png)
 ```
 
-## 8. Final Submission Format
-
-Submit these 5 items:
-1. GitHub repository link
-2. README with setup + deployment + screenshots
-3. Deployed frontend URL
-4. Deployed backend URL
-5. Screenshot section in README
-
-Example:
-- Repo: `https://github.com/Ghaffar0610/task-tracker-dashboard`
-- Frontend: `https://<your-frontend-url>`
-- Backend: `https://<your-backend-url>`
 
 ## 9. Useful Commands
 
